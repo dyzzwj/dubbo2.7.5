@@ -80,6 +80,9 @@ public class ExtensionLoader<T> {
 
     private static final ConcurrentMap<Class<?>, Object> EXTENSION_INSTANCES = new ConcurrentHashMap<>();
 
+    /**
+     * 扩展点加载器需要加载的接口
+     */
     private final Class<?> type;
 
     private final ExtensionFactory objectFactory;
@@ -122,8 +125,10 @@ public class ExtensionLoader<T> {
                     ") is not an extension, because it is NOT annotated with @" + SPI.class.getSimpleName() + "!");
         }
 
+        //本地缓存
         ExtensionLoader<T> loader = (ExtensionLoader<T>) EXTENSION_LOADERS.get(type);
         if (loader == null) {
+            //扩展点加载器
             EXTENSION_LOADERS.putIfAbsent(type, new ExtensionLoader<T>(type));
             loader = (ExtensionLoader<T>) EXTENSION_LOADERS.get(type);
         }
@@ -491,6 +496,7 @@ public class ExtensionLoader<T> {
     @SuppressWarnings("unchecked")
     public T getAdaptiveExtension() {
         Object instance = cachedAdaptiveInstance.get();
+        //开发人员没有提供接口的Adaptive类
         if (instance == null) {
             if (createAdaptiveInstanceError != null) {
                 throw new IllegalStateException("Failed to create adaptive instance: " +
@@ -502,6 +508,7 @@ public class ExtensionLoader<T> {
                 instance = cachedAdaptiveInstance.get();
                 if (instance == null) {
                     try {
+                        //创建接口的代理类
                         instance = createAdaptiveExtension();
                         cachedAdaptiveInstance.set(instance);
                     } catch (Throwable t) {
@@ -557,7 +564,7 @@ public class ExtensionLoader<T> {
                 instance = (T) EXTENSION_INSTANCES.get(clazz);
             }
 
-            // 依赖注入 IOC
+            // 依赖注入 IOC 只支持setter注入
             injectExtension(instance);
 
             // AOP，cachedWrapperClasses无序
@@ -596,7 +603,7 @@ public class ExtensionLoader<T> {
                     continue;
                 }
 
-                // set方法中的参数类型
+                // set方法中的第一个参数类型
                 Class<?> pt = method.getParameterTypes()[0];   // Person接口
                 if (ReflectUtils.isPrimitives(pt)) {
                     continue;
@@ -671,7 +678,7 @@ public class ExtensionLoader<T> {
             synchronized (cachedClasses) {
                 classes = cachedClasses.get();
                 if (classes == null) {
-                    classes = loadExtensionClasses(); // 加载、解析文件 Map
+                    classes = loadExtensionClasses(); // 加载、解析文件 Map 文件名：type的全限类名
                     cachedClasses.set(classes);
                 }
             }
@@ -718,6 +725,12 @@ public class ExtensionLoader<T> {
         }
     }
 
+    /**
+     * 加载dir目录下 文件名为type的k-v到extensionClasses中
+     * @param extensionClasses
+     * @param dir
+     * @param type
+     */
     private void loadDirectory(Map<String, Class<?>> extensionClasses, String dir, String type) {
         String fileName = dir + type;
         try {
@@ -757,7 +770,9 @@ public class ExtensionLoader<T> {
                             String name = null;
                             int i = line.indexOf('=');
                             if (i > 0) {
+                                //等号左边是k
                                 name = line.substring(0, i).trim();
+                                //等到右边是v
                                 line = line.substring(i + 1).trim();
                             }
                             if (line.length() > 0) {
@@ -778,6 +793,7 @@ public class ExtensionLoader<T> {
     }
 
     private void loadClass(Map<String, Class<?>> extensionClasses, java.net.URL resourceURL, Class<?> clazz, String name) throws NoSuchMethodException {
+        //clazz是否是type的实现 类
         if (!type.isAssignableFrom(clazz)) {
             throw new IllegalStateException("Error occurred when loading extension class (interface: " +
                     type + ", class line: " + clazz.getName() + "), class "
@@ -787,7 +803,7 @@ public class ExtensionLoader<T> {
         if (clazz.isAnnotationPresent(Adaptive.class)) {
             cacheAdaptiveClass(clazz);
         } else if (isWrapperClass(clazz)) {
-            // 是一个Wrapper类
+            // 是一个Wrapper类  有多个wrapper就会进行多次aop 多个wrapper类是没有先后顺序的
             cacheWrapperClass(clazz);
         } else {
             // 需要有无参的构造方法
@@ -881,6 +897,7 @@ public class ExtensionLoader<T> {
         if (cachedWrapperClasses == null) {
             cachedWrapperClasses = new ConcurrentHashSet<>();
         }
+        //set  无需
         cachedWrapperClasses.add(clazz);
     }
 
@@ -891,6 +908,7 @@ public class ExtensionLoader<T> {
      */
     private boolean isWrapperClass(Class<?> clazz) {
         try {
+            //如果有一个参数为type类型的的构造器 就是wrapper类
             clazz.getConstructor(type);
             return true;
         } catch (NoSuchMethodException e) {
@@ -922,7 +940,7 @@ public class ExtensionLoader<T> {
     }
 
     private Class<?> getAdaptiveExtensionClass() {
-        // 获取当前接口的所有扩展类
+        // 加载当前接口的所有扩展类
         getExtensionClasses();
         // 缓存了@Adaptive注解标记的类
         if (cachedAdaptiveClass != null) {
@@ -934,6 +952,7 @@ public class ExtensionLoader<T> {
 
     private Class<?> createAdaptiveExtensionClass() {
         // cachedDefaultName表示接口默认的扩展类
+        //生成java代码
         String code = new AdaptiveClassCodeGenerator(type, cachedDefaultName).generate();
 
         ClassLoader classLoader = findClassLoader();

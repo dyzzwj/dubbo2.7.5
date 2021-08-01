@@ -150,7 +150,7 @@
         <module>dubbo-metadata-report</module>
         <module>dubbo-configcenter</module>
         <module>dubbo-dependencies</module>
-        <module>dubbo-tuling</module>
+        <module>dubbo-zwj</module>
     </modules>
 
     <dependencyManagement>

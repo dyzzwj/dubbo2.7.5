@@ -28,7 +28,7 @@
     <dubbo:protocol name="http" server="jetty"/>
 
     <bean id="demoService" class="org.apache.dubbo.demo.provider.DemoServiceImpl"/>
-
+    <!-- 服务提供者提供的服务 -->
     <dubbo:service scope="none" interface="org.apache.dubbo.demo.DemoService" ref="demoService" />
 
 
