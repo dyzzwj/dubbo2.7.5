@@ -86,18 +86,25 @@ public class AdaptiveClassCodeGenerator {
      */
     public String generate() {
         // no need to generate adaptive class since there's no adaptive method found.
+        /**
+         * 如果接口方法上都没有添加@Adaptive注解 抛异常 要求只收有一个方法添加了@Adaptive注解
+         */
         if (!hasAdaptiveMethod()) {
             throw new IllegalStateException("No adaptive method exist on extension " + type.getName() + ", refuse to create the adaptive class!");
         }
 
         StringBuilder code = new StringBuilder();
+        //生成package信息
         code.append(generatePackageInfo());
+        //生成导入类 信息
         code.append(generateImports());
+        //生成类声明
         code.append(generateClassDeclaration());
 
         // 遍历接口中的方法，生成代理方法
         Method[] methods = type.getMethods();
         for (Method method : methods) {
+            //生成方法
             code.append(generateMethod(method));
         }
         code.append("}");
@@ -202,6 +209,7 @@ public class AdaptiveClassCodeGenerator {
         // 方法上存在Adaptive注解才进行代理
         Adaptive adaptiveAnnotation = method.getAnnotation(Adaptive.class);
         StringBuilder code = new StringBuilder(512);
+        //没有添加@Adaptive注解的方法
         if (adaptiveAnnotation == null) {
             return generateUnsupported(method);
         } else {
