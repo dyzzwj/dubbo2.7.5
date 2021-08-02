@@ -87,6 +87,7 @@ public class DubboComponentScanRegistrar implements ImportBeanDefinitionRegistra
         builder.addConstructorArgValue(packagesToScan);
         builder.setRole(BeanDefinition.ROLE_INFRASTRUCTURE);
         AbstractBeanDefinition beanDefinition = builder.getBeanDefinition();
+        //注册beanDefinition
         BeanDefinitionReaderUtils.registerWithGeneratedName(beanDefinition, registry);
 
     }

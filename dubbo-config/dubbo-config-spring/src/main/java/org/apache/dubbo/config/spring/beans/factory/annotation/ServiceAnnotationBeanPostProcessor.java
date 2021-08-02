@@ -92,6 +92,11 @@ public class ServiceAnnotationBeanPostProcessor implements BeanDefinitionRegistr
 
     private ClassLoader classLoader;
 
+    /**
+     * DubboComponentScanRegistrar#registerServiceAnnotationBeanPostProcessor()
+     * 注册到容器中，并给packagesToScan赋初始值
+     * @param packagesToScan
+     */
     public ServiceAnnotationBeanPostProcessor(String... packagesToScan) {
         this(Arrays.asList(packagesToScan));
     }

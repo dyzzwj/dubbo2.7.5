@@ -213,9 +213,9 @@ public class ExtensionLoader<T> {
      * @param url    url
      * @param values extension point names
      * @return extension list which are activated
-     * @see #getActivateExtension(org.apache.dubbo.common.URL, String[], String)
+     * @see #(org.apache.dubbo.common.URL, String[], String)
      */
-    // 获取name属于values中的Filter + 根据url能激活的Filter（激活规则就是匹配group+url中是否含有Filter的@Activate注解中所指定的value的key）
+    // 获取name属于values中的Filter + 根据url能激活的Filter（激活规则就是匹配group+url中是否含有FilSerer的@Activate注解中所指定的value的key）
     public List<T> getActivateExtension(URL url, String[] values) {
         return getActivateExtension(url, values, null);
     }
@@ -245,7 +245,7 @@ public class ExtensionLoader<T> {
      * @return extension list which are activated
      * @see org.apache.dubbo.common.extension.Activate
      */
-    public List<T> ygetActivateExtension(URL url, String[] values, String group) {
+    public List<T> getActivateExtension(URL url, String[] values, String group) {
         List<T> exts = new ArrayList<>();
         List<String> names = values == null ? new ArrayList<>(0) : Arrays.asList(values);
 
