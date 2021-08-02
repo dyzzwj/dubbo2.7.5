@@ -357,7 +357,7 @@ public class ExtensionLoader<T> {
         if (StringUtils.isEmpty(name)) {
             throw new IllegalArgumentException("Extension name == null");
         }
-        // 获取默认扩展类
+        // 获取默认扩展类  @SPI("") 属性指定接口默认扩展类
         if ("true".equals(name)) {
             return getDefaultExtension();
         }
