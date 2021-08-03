@@ -61,6 +61,7 @@ public class DubboConfigBindingBeanPostProcessor implements BeanPostProcessor, A
 
     /**
      * The prefix of Configuration Properties
+     * dubbo.registries.r2 r2是beanname
      */
     private final String prefix;
 
@@ -101,6 +102,7 @@ public class DubboConfigBindingBeanPostProcessor implements BeanPostProcessor, A
 
             AbstractConfig dubboConfig = (AbstractConfig) bean;
             // 从properties文件中获取值，并设置到dubboConfig对象中
+            //prefix : dubbo.protocols.p1
             bind(prefix, dubboConfig);
 
             // 设置dubboConfig对象的name属性，设置为beanName
@@ -114,6 +116,7 @@ public class DubboConfigBindingBeanPostProcessor implements BeanPostProcessor, A
 
     private void bind(String prefix, AbstractConfig dubboConfig) {
 
+        //prefix : dubbo.protocols.p1
         dubboConfigBinder.bind(prefix, dubboConfig);
 
         if (log.isInfoEnabled()) {

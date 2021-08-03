@@ -112,6 +112,7 @@ public class ServiceAnnotationBeanPostProcessor implements BeanDefinitionRegistr
     @Override
     public void postProcessBeanDefinitionRegistry(BeanDefinitionRegistry registry) throws BeansException {
 
+        //扫描的包集合
         Set<String> resolvedPackagesToScan = resolvePackagesToScan(packagesToScan);
 
         if (!CollectionUtils.isEmpty(resolvedPackagesToScan)) {
@@ -133,6 +134,7 @@ public class ServiceAnnotationBeanPostProcessor implements BeanDefinitionRegistr
      * @param registry       {@link BeanDefinitionRegistry}
      */
     private void registerServiceBeans(Set<String> packagesToScan, BeanDefinitionRegistry registry) {
+
 
         DubboClassPathBeanDefinitionScanner scanner =
                 new DubboClassPathBeanDefinitionScanner(registry, environment, resourceLoader);
@@ -286,14 +288,15 @@ public class ServiceAnnotationBeanPostProcessor implements BeanDefinitionRegistr
         // 服务实现类对应的bean的名字，比如：demoServiceImpl
         String annotatedServiceBeanName = beanDefinitionHolder.getBeanName();
 
-        // 生成一个ServiceBean
+        // 生成一个ServiceBean  每个服务实现类对应一个Servicebean
         AbstractBeanDefinition serviceBeanDefinition =
                 buildServiceBeanDefinition(service, serviceAnnotationAttributes, interfaceClass, annotatedServiceBeanName);
 
         // ServiceBean Bean name
+        //生成服务实现类对应ServiceBean的beanName
         String beanName = generateServiceBeanName(serviceAnnotationAttributes, interfaceClass);
 
-        if (scanner.checkCandidate(beanName, serviceBeanDefinition)) { // check duplicated candidate bean
+        if (scanner.checkCandidate(beanName, serviceBeanDefinition)) { // 判断是否有重复的bd
 
             // 把ServiceBean注册进去，对应的beanName为ServiceBean:org.apache.dubbo.demo.DemoService
             registry.registerBeanDefinition(beanName, serviceBeanDefinition);
@@ -401,15 +404,16 @@ public class ServiceAnnotationBeanPostProcessor implements BeanDefinitionRegistr
         propertyValues.addPropertyValues(new AnnotationPropertyValuesAdapter(serviceAnnotation, environment, ignoreAttributeNames));
 
         // References "ref" property to annotated-@Service Bean
+        //annotatedServiceBeanName:服务实现类对应的bean的名字
         // ref属性赋值为另外一个bean, 对应的就是被@Service注解的服务实现类对应的bean
         addPropertyReference(builder, "ref", annotatedServiceBeanName);
         // Set interface
         builder.addPropertyValue("interface", interfaceClass.getName());
         // Convert parameters into map
+        //serviceAnnotationAttributes:@Service注解上的属性
         builder.addPropertyValue("parameters", convertParameters(serviceAnnotationAttributes.getStringArray("parameters")));
 
         // 配置了methods属性，则给ServiceBean对应的methods属性赋值
-        // Add methods parameters
         List<MethodConfig> methodConfigs = convertMethodConfigs(serviceAnnotationAttributes.get("methods"));
         if (!methodConfigs.isEmpty()) {
             builder.addPropertyValue("methods", methodConfigs);

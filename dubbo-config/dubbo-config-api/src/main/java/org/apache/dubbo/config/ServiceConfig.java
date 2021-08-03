@@ -291,7 +291,6 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
     }
 
     public void checkAndUpdateSubConfigs() {
-        // Use default configs defined explicitly on global configs
         // ServiceConfig中的某些属性如果是空的，那么就从ProviderConfig、ModuleConfig、ApplicationConfig中获取
         // 补全ServiceConfig中的属性
         completeCompoundConfigs();
@@ -393,6 +392,7 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
     }
 
     public synchronized void export() {
+        //检查并且更新配置
         checkAndUpdateSubConfigs();
 
         // 检查服务是否需要导出
@@ -400,7 +400,7 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
             return;
         }
 
-        // 检查是否需要延迟发布
+        // 检查是否需要延迟发布 则延迟delay时间后暴露服务
         if (shouldDelay()) {
             DELAY_EXPORT_EXECUTOR.schedule(this::doExport, getDelay(), TimeUnit.MILLISECONDS);
         } else {

@@ -8,7 +8,7 @@ public class SpiTest {
     public static void main(String[] args) {
 
         ExtensionLoader<Protocol> extensionLoader = ExtensionLoader.getExtensionLoader(Protocol.class);
-        extensionLoader.getActivateExtension();
+//        extensionLoader.getActivateExtension();
         Protocol http = extensionLoader.getExtension("http");
         System.out.println(http);
     }

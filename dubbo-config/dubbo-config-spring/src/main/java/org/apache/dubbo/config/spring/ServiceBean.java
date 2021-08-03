@@ -92,7 +92,14 @@ public class ServiceBean<T> extends ServiceConfig<T> implements InitializingBean
         // 那么当需要获取该服务时就要从Spring容器中进行获取，
         // 也就是从applicationContext中获取，所以需要把applicationContext添加到SpringExtensionFactory中去
         SpringExtensionFactory.addApplicationContext(applicationContext);
-        // 一定要有这一步，不然ServiceBean将接收不到ContextRefreshedEvent事件
+
+        /**
+         *     一定要有这一步，不然ServiceBean将接收不到ContextRefreshedEvent事件 ？？ 笔者觉得可以不加这一步
+         *
+         *     ApplicationContextAwareProcessor#postProcessBeforeInitialization 调用 setApplicationContext
+         *     ApplicationListenerDetector#postProcessAfterInitialization -> postProcessAfterInitialization() 如果当前bean是ApplicationListener类型，
+         *     调用addListener添加到监听器列表中
+         */
         supportedApplicationListener = addApplicationListener(applicationContext, this);
     }
 

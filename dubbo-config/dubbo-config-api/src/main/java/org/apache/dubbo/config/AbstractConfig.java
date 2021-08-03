@@ -628,7 +628,7 @@ public abstract class AbstractConfig implements Serializable {
 
     // 刷新XxConfig
     // 一个XxConfig对象的属性可能是有值的，也可能是没有值的，这时需要从其他位置获取属性值,来进行属性的覆盖
-    // 覆盖的优先级，从大到小为系统变量->配置中心应用配置->配置中心全局配置->注解或xml中定义->dubbo.properties文件
+    // 覆盖的优先级，从大到小为系统变量->配置中心应用配置->配置中心全局配置->注解或xml中定义->dubbo.properties文件   优先级大的会被覆盖
 
     // 以ServiceConfig为例，ServiceConfig中包括很多属性，比如timeout
     // 但是在定义一个Service时，如果在注解上没有配置timeout，那么就会其他地方获取timeout的配置

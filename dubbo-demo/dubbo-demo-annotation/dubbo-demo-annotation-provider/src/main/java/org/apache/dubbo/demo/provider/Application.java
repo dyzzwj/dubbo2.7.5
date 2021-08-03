@@ -18,6 +18,7 @@
  */
 package org.apache.dubbo.demo.provider;
 
+import org.apache.dubbo.config.spring.context.annotation.DubboConfigConfiguration;
 import org.apache.dubbo.config.spring.context.annotation.EnableDubbo;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.ComponentScan;
@@ -30,6 +31,13 @@ public class Application {
         context.start();
 
         System.in.read();
+
+//        AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext();
+//        context.register(ProviderConfiguration.class);
+//        context.register(DubboConfigConfiguration.Single.class);
+//        context.refresh();
+//
+//        System.in.read();
     }
 
     @Configuration

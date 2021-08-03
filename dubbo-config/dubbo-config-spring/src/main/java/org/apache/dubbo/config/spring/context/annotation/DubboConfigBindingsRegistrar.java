@@ -53,6 +53,7 @@ public class DubboConfigBindingsRegistrar implements ImportBeanDefinitionRegistr
         for (AnnotationAttributes element : annotationAttributes) {
 
             // 逐个解析@EnableDubboConfigBinding注解，比如@EnableDubboConfigBinding(prefix = "dubbo.application", type = ApplicationConfig.class)
+            System.out.println(registry);
             registrar.registerBeanDefinitions(element, registry);
 
         }

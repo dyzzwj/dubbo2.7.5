@@ -40,11 +40,13 @@ public class DubboConfigConfigurationRegistrar implements ImportBeanDefinitionRe
     public void registerBeanDefinitions(AnnotationMetadata importingClassMetadata, BeanDefinitionRegistry registry) {
         System.out.println("执行DubboConfigConfigurationRegistrar");
 
-
+        //获取注解上的属性
         AnnotationAttributes attributes = AnnotationAttributes.fromMap(
                 importingClassMetadata.getAnnotationAttributes(EnableDubboConfig.class.getName()));
 
-        boolean multiple = attributes.getBoolean("multiple"); //true
+        //能否配置多组 比如协议
+        //默认true
+        boolean multiple = attributes.getBoolean("multiple");
 
         // Single Config Bindings
         registerBeans(registry, DubboConfigConfiguration.Single.class);

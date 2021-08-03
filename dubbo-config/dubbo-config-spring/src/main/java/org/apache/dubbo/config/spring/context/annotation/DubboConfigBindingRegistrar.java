@@ -76,6 +76,8 @@ public class DubboConfigBindingRegistrar implements ImportBeanDefinitionRegistra
 
     protected void registerBeanDefinitions(AnnotationAttributes attributes, BeanDefinitionRegistry registry) {
 
+        //attributes : @EnableDubboConfigBinding(prefix = "dubbo.application", type = ApplicationConfig.class)
+
         // prefix = "dubbo.application"
         String prefix = environment.resolvePlaceholders(attributes.getString("prefix"));
 
@@ -89,7 +91,7 @@ public class DubboConfigBindingRegistrar implements ImportBeanDefinitionRegistra
     }
 
     private void registerDubboConfigBeans(String prefix,
-                                          Class<? extends AbstractConfig> configClass,
+                                          Class<? extends AbstractConfig> configClass, //ApplicationConfig
                                           boolean multiple,
                                           BeanDefinitionRegistry registry) {
 
@@ -143,7 +145,7 @@ public class DubboConfigBindingRegistrar implements ImportBeanDefinitionRegistra
 
     private void registerDubboConfigBean(String beanName, Class<? extends AbstractConfig> configClass,
                                          BeanDefinitionRegistry registry) {
-
+        //configClass: ApplicationConfig
         BeanDefinitionBuilder builder = rootBeanDefinition(configClass);
 
         AbstractBeanDefinition beanDefinition = builder.getBeanDefinition();
@@ -168,9 +170,10 @@ public class DubboConfigBindingRegistrar implements ImportBeanDefinitionRegistra
 
         Class<?> processorClass = DubboConfigBindingBeanPostProcessor.class;
 
+        //生成DubboConfigBindingBeanPostProcessor对应的bd
         BeanDefinitionBuilder builder = rootBeanDefinition(processorClass);
 
-        // 真实的前缀，比如dubbo.registries.r2
+        // 真实的前缀，比如dubbo.registries.r2 r2是beanname
         String actualPrefix = multiple ? normalizePrefix(prefix) + beanName : prefix;
 
         // 添加两个构造方法参数值，所以会调用DubboConfigBindingBeanPostProcessor的两个参数的构造方法

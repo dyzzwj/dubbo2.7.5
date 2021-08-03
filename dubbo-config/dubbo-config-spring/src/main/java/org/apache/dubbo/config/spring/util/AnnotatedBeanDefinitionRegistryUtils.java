@@ -97,6 +97,7 @@ public abstract class AnnotatedBeanDefinitionRegistryUtils {
         // Remove all annotated-classes that have been registered
         Iterator<Class<?>> iterator = new ArrayList<>(asList(annotatedClasses)).iterator();
 
+        //移除已经使用注解注册的类
         while (iterator.hasNext()) {
             Class<?> annotatedClass = iterator.next();
             if (isPresentBean(registry, annotatedClass)) {
@@ -110,8 +111,9 @@ public abstract class AnnotatedBeanDefinitionRegistryUtils {
             logger.debug(registry.getClass().getSimpleName() + " will register annotated classes : " + asList(annotatedClasses) + " .");
         }
         /**
-         *     利用Spring中的AnnotatedBeanDefinitionReader来解析annotatedClasses
+         *     利用Spring中的AnnotatedBeanDefinitionReader来解析annotatedClasses(DubboConfigConfiguration.Single.class)
          *     会解析该类上的注解，然后进行处理
+         *     注册 DubboConfigConfiguration.Single.class
          */
         reader.register(annotatedClasses);
 
