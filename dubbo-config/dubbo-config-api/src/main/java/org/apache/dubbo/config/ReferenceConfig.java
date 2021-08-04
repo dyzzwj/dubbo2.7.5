@@ -250,7 +250,7 @@ public class ReferenceConfig<T> extends AbstractReferenceConfig {
         checkMetadataReport();
     }
 
-    public synchronized T get() {
+    public synchronized T Seget() {
         checkAndUpdateSubConfigs();
 
         if (destroyed) {

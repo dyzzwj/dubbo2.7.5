@@ -61,6 +61,7 @@ public class Environment {
     public InmemoryConfiguration getExternalConfig(String prefix, String id) {
         return externalConfigs.computeIfAbsent(toKey(prefix, id), k -> {
             InmemoryConfiguration configuration = new InmemoryConfiguration(prefix, id);
+            //从配置中心获取的全局配置
             configuration.setProperties(externalConfigurationMap);
             return configuration;
         });
@@ -69,6 +70,7 @@ public class Environment {
     public InmemoryConfiguration getAppExternalConfig(String prefix, String id) {
         return appExternalConfigs.computeIfAbsent(toKey(prefix, id), k -> {
             InmemoryConfiguration configuration = new InmemoryConfiguration(prefix, id);
+            //从配置中心获取的app配置
             configuration.setProperties(appExternalConfigurationMap);
             return configuration;
         });

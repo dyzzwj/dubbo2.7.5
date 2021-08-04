@@ -107,13 +107,16 @@ public abstract class AnnotatedInterfaceConfigBeanBuilder<C extends AbstractInte
         // 把@Reference注解中的配置项赋值给configBean
         preConfigureBean(attributes, configBean);
 
-
+        //把@Refrence注解中配置的registry属性复制给configBean
         configureRegistryConfigs(configBean);
 
+        //把@Refrence注解中配置的monitor属性复制给configBean
         configureMonitorConfig(configBean);
 
+        //把@Refrence注解中配置的application属性复制给configBean
         configureApplicationConfig(configBean);
 
+        //把@Refrence注解中配置的module属性复制给configBean
         configureModuleConfig(configBean);
 
         // 设置applicationContext、interfaceName、consumer、methods属性，并调用ReferenceBean对象的afterPropertiesSet方法
@@ -152,6 +155,7 @@ public abstract class AnnotatedInterfaceConfigBeanBuilder<C extends AbstractInte
 
         String applicationConfigBeanName = resolveApplicationConfigBeanName(attributes);
 
+        //根据@Reference注解里application的名字找对应的bean
         ApplicationConfig applicationConfig =
                 getOptionalBean(applicationContext, applicationConfigBeanName, ApplicationConfig.class);
 
@@ -163,6 +167,7 @@ public abstract class AnnotatedInterfaceConfigBeanBuilder<C extends AbstractInte
 
         String moduleConfigBeanName = resolveModuleConfigBeanName(attributes);
 
+        //根据@Reference注解里module的名字找对应的bean
         ModuleConfig moduleConfig =
                 getOptionalBean(applicationContext, moduleConfigBeanName, ModuleConfig.class);
 
