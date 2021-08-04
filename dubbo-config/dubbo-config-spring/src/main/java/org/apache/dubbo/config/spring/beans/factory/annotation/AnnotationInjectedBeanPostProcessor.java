@@ -145,6 +145,7 @@ public abstract class AnnotationInjectedBeanPostProcessor extends
         // 寻找需要注入的属性（被@Reference标注的Field）
         InjectionMetadata metadata = findInjectionMetadata(beanName, bean.getClass(), pvs);
         try {
+            //属性注入 最后会调到AnnotatedFieldElement.inject或AnnotatedMethodElement.inject
             metadata.inject(bean, beanName, pvs);
         } catch (BeanCreationException ex) {
             throw ex;
@@ -166,8 +167,10 @@ public abstract class AnnotationInjectedBeanPostProcessor extends
 
         final List<AnnotationInjectedBeanPostProcessor.AnnotatedFieldElement> elements = new LinkedList<AnnotationInjectedBeanPostProcessor.AnnotatedFieldElement>();
 
+        //遍历类里面的属性
         ReflectionUtils.doWithFields(beanClass, field -> {
 
+            //getAnnotationTypes():@Reference注解
             for (Class<? extends Annotation> annotationType : getAnnotationTypes()) {
 
                 AnnotationAttributes attributes = getMergedAttributes(field, annotationType, getEnvironment(), true);
@@ -180,7 +183,7 @@ public abstract class AnnotationInjectedBeanPostProcessor extends
                         }
                         return;
                     }
-
+                    //构造注入点
                     elements.add(new AnnotatedFieldElement(field, attributes));
                 }
             }
@@ -262,6 +265,9 @@ public abstract class AnnotationInjectedBeanPostProcessor extends
                         metadata.clear(pvs);
                     }
                     try {
+                        /**
+                         * 构造注解元信息
+                         */
                         metadata = buildAnnotatedMetadata(clazz);
                         this.injectionMetadataCache.put(cacheKey, metadata);
                     } catch (NoClassDefFoundError err) {

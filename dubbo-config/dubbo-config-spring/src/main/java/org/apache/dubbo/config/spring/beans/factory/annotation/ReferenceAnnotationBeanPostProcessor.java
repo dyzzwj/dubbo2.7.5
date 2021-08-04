@@ -130,6 +130,9 @@ public class ReferenceAnnotationBeanPostProcessor extends AnnotationInjectedBean
          * The name of bean that annotated Dubbo's {@link Service @Service} in local Spring {@link ApplicationContext}
          */
         // 按ServiceBean的beanName生成规则来生成referencedBeanName， 规则为ServiceBean:interfaceClassName:version:group
+        //attributes存的是@Reference注解中所配置的额属性和值
+        //referencedBeanName为 ServiceBean:org.apache.dubbo.demo.DemoService
+        //referencedBeanName表示我现在要引用的这个服务，它到处时对应的serviceBean的beanname
         String referencedBeanName = buildReferencedBeanName(attributes, injectedType);
 
         /**
@@ -167,21 +170,24 @@ public class ReferenceAnnotationBeanPostProcessor extends AnnotationInjectedBean
 
         ConfigurableListableBeanFactory beanFactory = getBeanFactory();
 
-        // 就是referenceBeanName
+        // 就是referenceBeanName 这个beanname 直接取的@Reference的全信息
+        //所以 就算服务消费者引用的是同一个服务 如果@Reference注解上的信息不同 n那么就会生成不同的ReferceBean
         String beanName = getReferenceBeanName(attributes, interfaceClass);
 
-        // 当前Spring容器中是否存在referencedBeanName
+        // 当前Spring容器中是否存在referencedBeanName 如果存在 要引入的服务就算一个本地服务
         if (existsServiceBean(referencedBeanName)) { // If @Service bean is local one
             /**
              * Get  the @Service's BeanDefinition from {@link BeanFactory}
              * Refer to {@link ServiceAnnotationBeanPostProcessor#buildServiceBeanDefinition}
              */
+            //获取ServiceBean 的bd
             AbstractBeanDefinition beanDefinition = (AbstractBeanDefinition) beanFactory.getBeanDefinition(referencedBeanName);
             RuntimeBeanReference runtimeBeanReference = (RuntimeBeanReference) beanDefinition.getPropertyValues().get("ref"); // ServiceBean --- ref
             // The name of bean annotated @Service
-            String serviceBeanName = runtimeBeanReference.getBeanName(); // DemoServiceImpl对应的beanName
+            // DemoServiceImpl对应的beanName
+            String serviceBeanName = runtimeBeanReference.getBeanName();
             // register Alias rather than a new bean name, in order to reduce duplicated beans
-            // DemoServiceImpl多了一个别名，比如 demoServiceImpl和
+            //如果是本地提供的一个服务 给demoService注册一个别名
             beanFactory.registerAlias(serviceBeanName, beanName);
         } else { // Remote @Service Bean
             if (!beanFactory.containsBean(beanName)) {
