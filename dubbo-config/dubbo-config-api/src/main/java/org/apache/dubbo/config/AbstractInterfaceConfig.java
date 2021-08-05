@@ -299,12 +299,13 @@ public abstract class AbstractInterfaceConfig extends AbstractMethodConfig {
             // 动态配置中心，管理台上的配置中心
             DynamicConfiguration dynamicConfiguration = getDynamicConfiguration(configCenter.toUrl());
 
-            // 如果是zookeeper，获取的就是/dubbo/config/dubbo/dubbo.properties节点中的内容
+            // 获取全局的配置 如果是zookeeper，获取的就是/dubbo/config/dubbo/dubbo.properties节点中的内容
             String configContent = dynamicConfiguration.getProperties(configCenter.getConfigFile(), configCenter.getGroup());
 
             String appGroup = application != null ? application.getName() : null;
             String appConfigContent = null;
             if (StringUtils.isNotEmpty(appGroup)) {
+                //获取应用的配置
                 // 获取的就是/dubbo/config/dubbo-demo-consumer-application/dubbo.properties节点中的内容
                 // 这里有bug
                 appConfigContent = dynamicConfiguration.getProperties
@@ -314,7 +315,9 @@ public abstract class AbstractInterfaceConfig extends AbstractMethodConfig {
             }
             try {
                 Environment.getInstance().setConfigCenterFirst(configCenter.isHighestPriority());
+                //先解析全局配置
                 Environment.getInstance().updateExternalConfigurationMap(parseProperties(configContent));
+                //在解析应用配置
                 Environment.getInstance().updateAppExternalConfigurationMap(parseProperties(appConfigContent));
             } catch (IOException e) {
                 throw new IllegalStateException("Failed to parse configurations from Config Center.", e);

@@ -392,7 +392,7 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
     }
 
     public synchronized void export() {
-        //检查并且更新配置
+        //检查并且更新配置  在此之前从properties中和注解中获取的配置都是优先级比较低的 需要获取优先级更高的配置去覆盖
         checkAndUpdateSubConfigs();
 
         // 检查服务是否需要导出
@@ -927,6 +927,9 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
     }
 
     private void completeCompoundConfigs() {
+
+        //application -> module -> provider -> service
+
         // 如果配置了provider，那么则从provider中获取信息赋值其他属性，在这些属性为空的情况下
         if (provider != null) {
             if (application == null) {

@@ -636,13 +636,20 @@ public abstract class AbstractConfig implements Serializable {
     // refresh是刷新，将当前ServiceConfig上的set方法所对应的属性更新为优先级最高的值
     public void refresh() {
         try {
+            /**
+             * 组合jvm环境变量 操作系统变量 配置中心app配置 配置中心全局配置 dubbo.properties中的配置
+             */
             CompositeConfiguration compositeConfiguration = Environment.getInstance().getConfiguration(getPrefix(), getId());
 
             // 表示XxConfig对象本身- AbstractConfig
             Configuration config = new ConfigConfigurationAdapter(this);  // ServiceConfig
 
+            /**
+             * 配置优先级  CompositeConfiguration中configList里元素的优先级就是配置的优先级
+             */
             if (Environment.getInstance().isConfigCenterFirst()) {
                 // The sequence would be: SystemConfiguration -> AppExternalConfiguration -> ExternalConfiguration -> AbstractConfig -> PropertiesConfiguration
+
                 compositeConfiguration.addConfiguration(4, config);
             } else {
                 // The sequence would be: SystemConfiguration -> AbstractConfig -> AppExternalConfiguration -> ExternalConfiguration -> PropertiesConfiguration
@@ -655,6 +662,9 @@ public abstract class AbstractConfig implements Serializable {
                 // 是不是setXX()方法
                 if (MethodUtils.isSetter(method)) {
                     // 获取xx配置项的value
+                    /**
+                     * compositeConfiguration.getString:从各个配置地方获取配置
+                     */
                     String value = StringUtils.trim(compositeConfiguration.getString(extractPropertyName(getClass(), method)));
                     // isTypeMatch() is called to avoid duplicate and incorrect update, for example, we have two 'setGeneric' methods in ReferenceConfig.
                     if (StringUtils.isNotEmpty(value) && ClassUtils.isTypeMatch(method.getParameterTypes()[0], value)) {

@@ -63,7 +63,9 @@ public class CompositeConfiguration implements Configuration {
     public Object getInternalProperty(String key) {
         Configuration firstMatchingConfiguration = null;
 
-        //
+        /**
+         * 根据configList里元素的顺序去获取配置 找到即停止
+         */
         for (Configuration config : configList) {
             try {
                 if (config.containsKey(key)) {
