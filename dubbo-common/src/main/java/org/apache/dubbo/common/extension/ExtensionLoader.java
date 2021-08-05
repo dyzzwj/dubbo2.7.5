@@ -1013,7 +1013,7 @@ public class ExtensionLoader<T> {
         if (cachedAdaptiveClass != null) {
             return cachedAdaptiveClass;
         }
-        // 如果某个接口没有手动指定一个Adaptive类，那么就自动生成一个Adaptive类
+        // 如果某个接口没有手动指定一个Adaptive类，那么就自动生成 一个Adaptive类
         return cachedAdaptiveClass = createAdaptiveExtensionClass();
     }
 
