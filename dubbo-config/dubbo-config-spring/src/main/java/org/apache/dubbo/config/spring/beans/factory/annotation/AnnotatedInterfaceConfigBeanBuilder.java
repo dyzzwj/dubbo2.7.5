@@ -74,6 +74,7 @@ public abstract class AnnotatedInterfaceConfigBeanBuilder<C extends AbstractInte
      */
     public final C build() throws Exception {
 
+        //空方法
         checkDependencies();
 
         // 创建一个ReferenceBean对象
