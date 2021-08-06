@@ -431,6 +431,7 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
     }
 
     protected synchronized void doExport() {
+        //当前服务以及被取消了 就不能再到处了 为什么？
         if (unexported) {
             throw new IllegalStateException("The service " + interfaceClass.getName() + " has already unexported!");
         }
@@ -443,6 +444,7 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
         if (StringUtils.isEmpty(path)) {
             path = interfaceName;
         }
+        //导出url
         doExportUrls();
     }
 
@@ -481,6 +483,7 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
     @SuppressWarnings({"unchecked", "rawtypes"})
     private void doExportUrls() {
         // registryURL 表示一个注册中心
+        //得到url 注册服务也是一个服务 所以也会有对应的URL 通过调用该url 完成服务注册
         List<URL> registryURLs = loadRegistries(true);
 
         for (ProtocolConfig protocolConfig : protocols) {
@@ -700,11 +703,14 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
                         // 这个Invoker中包括了服务的实现者、服务接口类、服务的注册地址（针对当前服务的，参数export指定了当前服务）
                         // 此invoker表示一个可执行的服务，调用invoker的invoke()方法即可执行服务,同时此invoker也可用来导出
                         Invoker<?> invoker = PROXY_FACTORY.getInvoker(ref, (Class) interfaceClass, registryURL.addParameterAndEncoded(EXPORT_KEY, url.toFullString()));
-                        // invoker.invoke(Invocation)
+
 
                         // DelegateProviderMetaDataInvoker也表示服务提供者，包括了Invoker和服务的配置
                         DelegateProviderMetaDataInvoker wrapperInvoker = new DelegateProviderMetaDataInvoker(invoker, this);
 
+                        /**
+                         * ExtensionLoader.getExtensionLoader(Protocol.class).getAdaptiveExtension();
+                         */
                         // 使用特定的协议来对服务进行导出，这里的协议为RegistryProtocol，导出成功后得到一个Exporter
                         // 1. 先使用RegistryProtocol进行服务注册
                         // 2. 注册完了之后，使用DubboProtocol进行导出
