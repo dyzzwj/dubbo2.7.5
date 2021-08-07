@@ -250,7 +250,7 @@ public class ReferenceConfig<T> extends AbstractReferenceConfig {
         checkMetadataReport();
     }
 
-    public synchronized T Seget() {
+    public synchronized T get() {
         checkAndUpdateSubConfigs();
 
         if (destroyed) {
@@ -374,7 +374,7 @@ public class ReferenceConfig<T> extends AbstractReferenceConfig {
         } else {
             // 为什么会有urls，因为可以在@Reference的url属性中配置多个url，可以是点对点的服务地址，也可以是注册中心的地址
             urls.clear(); // reference retry init will add url to urls, lead to OOM
-            // @Reference中指定了url属性
+            // @Reference中指定了url属性 直连
             if (url != null && url.length() > 0) { // user specified URL, could be peer-to-peer address, or register center's address.
                 String[] us = SEMICOLON_SPLIT_PATTERN.split(url); // 用;号切分
                 if (us != null && us.length > 0) {

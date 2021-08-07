@@ -242,7 +242,7 @@ public class RegistryProtocol implements Protocol {
         // 得到注册中心-ZookeeperRegistry
         final Registry registry = getRegistry(originInvoker);
 
-        // 得到存入到注册中心去的providerUrl,会对服务提供者url中的参数进行简化
+        // 得到存入到注册中心去的providerUrl,会对服务提供者url中的参数进行简化（删除一些不需要的参数）
         final URL registeredProviderUrl = getRegisteredProviderUrl(providerUrl, registryUrl);
 
         // 将当前服务提供者Invoker，以及该服务对应的注册中心地址，以及简化后的服务url存入ProviderConsumerRegTable
