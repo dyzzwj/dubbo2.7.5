@@ -88,6 +88,7 @@ final class HeaderExchangeChannel implements ExchangeChannel {
         if (message instanceof Request
                 || message instanceof Response
                 || message instanceof String) {
+            //
             channel.send(message, sent);
         } else {
             Request request = new Request();
@@ -113,6 +114,10 @@ final class HeaderExchangeChannel implements ExchangeChannel {
         req.setVersion(Version.getProtocolVersion());
         req.setTwoWay(true);
         req.setData(request);
+        /**
+         *  为  检查请求超时 生成一个定时任务
+         *  如果请求没有超时  在HeaderExchangeHandler#handleResponse()会取消这个定时任务
+         */
         DefaultFuture future = DefaultFuture.newFuture(channel, req, timeout);
         try {
             channel.send(req);

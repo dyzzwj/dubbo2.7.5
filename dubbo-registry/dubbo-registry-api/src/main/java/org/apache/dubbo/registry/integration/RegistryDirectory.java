@@ -95,11 +95,15 @@ public class RegistryDirectory<T> extends AbstractDirectory<T> implements Notify
     private static final RouterFactory ROUTER_FACTORY = ExtensionLoader.getExtensionLoader(RouterFactory.class)
             .getAdaptiveExtension();
 
+
     private final String serviceKey; // Initialization at construction time, assertion not null
     private final Class<T> serviceType; // Initialization at construction time, assertion not null
     private final Map<String, String> queryMap; // Initialization at construction time, assertion not null
     private final URL directoryUrl; // Initialization at construction time, assertion not null, and always assign non null value
     private final boolean multiGroup;
+    /**
+     * 创建RegistryDirectory对象时 依赖注入 进来的 注入的是protocol的adaptive类
+     */
     private Protocol protocol; // Initialization at the time of injection, the assertion is not null
     private Registry registry; // Initialization at the time of injection, the assertion is not null
     private volatile boolean forbidden = false;
@@ -118,12 +122,22 @@ public class RegistryDirectory<T> extends AbstractDirectory<T> implements Notify
 
     // Map<url, Invoker> cache service url to invoker mapping.
     private volatile Map<String, Invoker<T>> urlInvokerMap; // The initial value is null and the midway may be assigned to null, please use the local variable reference
+
+    /**
+     * 所有的服务提供者列表（未进行tag过滤）
+     */
     private volatile List<Invoker<T>> invokers;
 
     // Set<invokerUrls> cache invokeUrls to invokers mapping.
     private volatile Set<URL> cachedInvokerUrls; // The initial value is null and the midway may be assigned to null, please use the local variable reference
 
+    /**
+     * 消费者应用配置监听 一个应用对应一个监听器 多个服务共享同一个消费者应用监听器
+     */
     private static final ConsumerConfigurationListener CONSUMER_CONFIGURATION_LISTENER = new ConsumerConfigurationListener();
+    /**
+     *  服务配置监听器 一个服务对应一个监听器
+     */
     private ReferenceConfigurationListener serviceConfigurationListener;
 
 
@@ -232,12 +246,15 @@ public class RegistryDirectory<T> extends AbstractDirectory<T> implements Notify
 
         // 获取服务提供者URL
         List<URL> providerURLs = categoryUrls.getOrDefault(PROVIDERS_CATEGORY, Collections.emptyList());
+        //重写
         refreshOverrideAndInvoker(providerURLs);
     }
 
     private void refreshOverrideAndInvoker(List<URL> urls) {
         // mock zookeeper://xxx?mock=return null
         overrideDirectoryUrl();
+
+        //刷新Invoker
         refreshInvoker(urls);
     }
 
@@ -410,6 +427,7 @@ public class RegistryDirectory<T> extends AbstractDirectory<T> implements Notify
                 continue;
             }
 
+            //合并服务提供者和服务消费者的配置  服务消费者的配置覆盖服务提供者的配置   消费端以消费端的配置为准
             URL url = mergeUrl(providerUrl);
 
             String key = url.toFullString(); // The parameter urls are sorted
@@ -682,13 +700,17 @@ public class RegistryDirectory<T> extends AbstractDirectory<T> implements Notify
     private void overrideDirectoryUrl() {
         // merge override parameters
         this.overrideDirectoryUrl = directoryUrl;
+        //老版本动态配置
         List<Configurator> localConfigurators = this.configurators; // local reference
+
         doOverrideUrl(localConfigurators);
 
+        //应用动态配置
         List<Configurator> localAppDynamicConfigurators = CONSUMER_CONFIGURATION_LISTENER.getConfigurators(); // local reference
         doOverrideUrl(localAppDynamicConfigurators);
 
         if (serviceConfigurationListener != null) {
+            //服务动态配置
             List<Configurator> localDynamicConfigurators = serviceConfigurationListener.getConfigurators(); // local reference
             doOverrideUrl(localDynamicConfigurators);
         }

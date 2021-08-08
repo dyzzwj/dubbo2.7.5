@@ -1021,7 +1021,7 @@ public class ExtensionLoader<T> {
         // cachedDefaultName表示接口默认的扩展类
         //生成java源代码
         String code = new AdaptiveClassCodeGenerator(type, cachedDefaultName).generate();
-
+        System.out.println("type：" + type + "对应的adaptive类：\n" + code);
         ClassLoader classLoader = findClassLoader();
         org.apache.dubbo.common.compiler.Compiler compiler = ExtensionLoader.getExtensionLoader(org.apache.dubbo.common.compiler.Compiler.class).getAdaptiveExtension();
         //编译

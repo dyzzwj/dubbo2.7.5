@@ -59,6 +59,12 @@ public class ExceptionFilter extends ListenableFilter {
 
         private Logger logger = LoggerFactory.getLogger(ExceptionListener.class);
 
+
+        /**
+         * 如果调用某个方法 服务端出现了异常 如果是RuntimeException 服务端会将异常信息以字符串的方式返回
+         * 客户端接受到请求后 判断服务端抛出了异常 将返回的字符串异常信息转化为Exception对象
+         *  前提是客户端得有这个异常类(class)  不认字符串转成哪种异常类型呢
+         */
         @Override
         public void onResponse(Result appResponse, Invoker<?> invoker, Invocation invocation) {
             if (appResponse.hasException() && GenericService.class != invoker.getInterface()) {
@@ -72,7 +78,7 @@ public class ExceptionFilter extends ListenableFilter {
                     }
 
                     // directly throw if the exception appears in the signature
-                    // 在方法签名上有声明，直接抛出
+                    // 在方法签名上有声明，直接抛出  客户端那边肯定有这个异常类
                     try {
                         Method method = invoker.getInterface().getMethod(invocation.getMethodName(), invocation.getParameterTypes());
                         Class<?>[] exceptionClassses = method.getExceptionTypes();
@@ -90,7 +96,7 @@ public class ExceptionFilter extends ListenableFilter {
                     logger.error("Got unchecked and undeclared exception which called by " + RpcContext.getContext().getRemoteHost() + ". service: " + invoker.getInterface().getName() + ", method: " + invocation.getMethodName() + ", exception: " + exception.getClass().getName() + ": " + exception.getMessage(), exception);
 
                     // directly throw if exception class and interface class are in the same jar file.
-                    // 异常类和接口类在同一jar包里，直接抛出
+                    // 异常类和接口类在同一jar包里，直接抛出  客户端那边也有这个异常类
                     String serviceFile = ReflectUtils.getCodeBase(invoker.getInterface());
                     String exceptionFile = ReflectUtils.getCodeBase(exception.getClass());
                     if (serviceFile == null || exceptionFile == null || serviceFile.equals(exceptionFile)) {
@@ -111,7 +117,7 @@ public class ExceptionFilter extends ListenableFilter {
                     }
 
                     // otherwise, wrap with RuntimeException and throw back to the client
-                    // 否则，包装成RuntimeException抛给客户端 TulingExexp
+                    // 否则，包装成RuntimeException抛给客户端 自定义异常 客户端那边可能没有这个异常类
                     appResponse.setException(new RuntimeException(StringUtils.toString(exception)));
                     return;
                 } catch (Throwable e) {

@@ -47,6 +47,9 @@ public abstract class ListenableRouter extends AbstractRouter implements Configu
 
     private static final Logger logger = LoggerFactory.getLogger(ListenableRouter.class);
     private ConditionRouterRule routerRule;
+    /**
+     * 路由规则
+     */
     private List<ConditionRouter> conditionRouters = Collections.emptyList();
 
     public ListenableRouter(DynamicConfiguration configuration, URL url, String ruleKey) {

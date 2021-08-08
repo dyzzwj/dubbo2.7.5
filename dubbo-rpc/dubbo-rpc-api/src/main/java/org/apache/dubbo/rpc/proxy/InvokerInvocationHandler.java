@@ -54,6 +54,10 @@ public class InvokerInvocationHandler implements InvocationHandler {
 
         // 这里的recreate方法很重要，他会调用AppResponse的recreate方法，
         // 如果AppResponse对象中存在exception信息，则此方法中会throw这个异常
+        /**
+         * 如果调用某个方法 服务端出现了异常 如果是RuntimeException 服务端会将异常信息以字符串的方式返回
+         * 客户端接受到请求后 判断服务端抛出了异常 将返回的字符串异常信息转化为Exception对象
+         */
         return invoker.invoke(new RpcInvocation(method, args)).recreate();
     }
 }

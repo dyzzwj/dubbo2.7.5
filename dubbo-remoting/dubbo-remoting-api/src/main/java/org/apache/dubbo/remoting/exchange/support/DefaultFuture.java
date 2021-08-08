@@ -79,6 +79,9 @@ public class DefaultFuture extends CompletableFuture<Object> {
      */
     private static void timeoutCheck(DefaultFuture future) {
         TimeoutCheckTask task = new TimeoutCheckTask(future.getId());
+        /**
+         * 如果客户端在超时之前拿到响应了 会取消定时任务
+         */
         future.timeoutCheckTask = TIME_OUT_TIMER.newTimeout(task, future.getTimeout(), TimeUnit.MILLISECONDS);
     }
 
@@ -95,6 +98,9 @@ public class DefaultFuture extends CompletableFuture<Object> {
     public static DefaultFuture newFuture(Channel channel, Request request, int timeout) {
         final DefaultFuture future = new DefaultFuture(channel, request, timeout);
         // timeout check
+        /**
+         * 为  检查请求超时 生成一个定时任务
+         */
         timeoutCheck(future);
         return future;
     }
@@ -146,9 +152,13 @@ public class DefaultFuture extends CompletableFuture<Object> {
             // response的id，
             DefaultFuture future = FUTURES.remove(response.getId());
             if (future != null) {
+                //
                 Timeout t = future.timeoutCheckTask;
                 if (!timeout) {
                     // decrease Time
+                    /**
+                     * 如果没有超时 会取消请求超时检查任务 HeaderExchangeChannel#request()
+                     */
                     t.cancel();
                 }
                 future.doReceived(response);
@@ -185,6 +195,9 @@ public class DefaultFuture extends CompletableFuture<Object> {
             throw new IllegalStateException("response cannot be null");
         }
         if (res.getStatus() == Response.OK) {
+            /**
+             * 如果请求是同步的 解阻塞 AsyncToSyncInvoker#invoke()
+             */
             this.complete(res.getResult());
         } else if (res.getStatus() == Response.CLIENT_TIMEOUT || res.getStatus() == Response.SERVER_TIMEOUT) {
             this.completeExceptionally(new TimeoutException(res.getStatus() == Response.SERVER_TIMEOUT, channel, res.getErrorMessage()));
