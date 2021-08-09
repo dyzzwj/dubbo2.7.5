@@ -130,6 +130,9 @@ public class RegistryProtocol implements Protocol {
     private final ConcurrentMap<String, ExporterChangeableWrapper<?>> bounds = new ConcurrentHashMap<>();
     //依赖注入，注入进来的是Cluster的Adaptive类
     private Cluster cluster;
+    /**
+     * 依赖注入 注入的是
+     */
     private Protocol protocol;
     private RegistryFactory registryFactory;
     private ProxyFactory proxyFactory;
@@ -187,7 +190,8 @@ public class RegistryProtocol implements Protocol {
 
     public void register(URL registryUrl, URL registeredProviderUrl) {
         Registry registry = registryFactory.getRegistry(registryUrl);
-        // 调用ZookeeperRegistry的register方法
+
+        //FailbackRegistry.register
         registry.register(registeredProviderUrl);
     }
 
@@ -230,7 +234,7 @@ public class RegistryProtocol implements Protocol {
         // 新版本监听的zk路径是：
         // 服务： /dubbo/config/dubbo/org.apache.dubbo.demo.DemoService.configurators节点的内容
         // 应用： /dubbo/config/dubbo/dubbo-demo-provider-application.configurators节点的内容
-        // 注意，要喝配置中心的路径区分开来，配置中心的路径是：
+        // 注意，要和配置中心的路径区分开来，配置中心的路径是：
         // 应用：/dubbo/config/dubbo/org.apache.dubbo.demo.DemoService/dubbo.properties节点的内容
         // 全局：/dubbo/config/dubbo/dubbo.properties节点的内容
         providerUrl = overrideUrlWithConfig(providerUrl, overrideSubscribeListener);
@@ -295,6 +299,7 @@ public class RegistryProtocol implements Protocol {
             // protocol属性的值是哪来的，是在SPI中注入进来的，是一个代理类
             // 这里实际利用的就是DubboProtocol或HttpProtocol去export  NettyServer
             // 为什么需要ExporterChangeableWrapper？方便注销已经被导出的服务
+            //invokerDelegate里的URL是服务提供者的url，最终会调用DubboProtocol或HttpProtocol
             return new ExporterChangeableWrapper<>((Exporter<T>) protocol.export(invokerDelegate), originInvoker);
         });
     }

@@ -9,12 +9,12 @@ public class SpiTest {
 
     public static void main(String[] args) {
 
-//        ExtensionLoader<Protocol> extensionLoader = ExtensionLoader.getExtensionLoader(Protocol.class);
-//        Protocol http = extensionLoader.getExtension("http");
-//        System.out.println(http);
+        ExtensionLoader<Protocol> extensionLoader = ExtensionLoader.getExtensionLoader(Protocol.class);
+        Protocol http = extensionLoader.getExtension("dubbo");
+        System.out.println(http);
 
 
-        ExtensionLoader.getExtensionLoader(RouterFactory.class).getAdaptiveExtension();
+//        ExtensionLoader.getExtensionLoader(RouterFactory.class).getAdaptiveExtension();
 
 
     }

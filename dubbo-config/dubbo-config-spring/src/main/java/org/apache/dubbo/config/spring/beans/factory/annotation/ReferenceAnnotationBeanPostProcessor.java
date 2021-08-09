@@ -132,7 +132,7 @@ public class ReferenceAnnotationBeanPostProcessor extends AnnotationInjectedBean
         // 按ServiceBean的beanName生成规则来生成referencedBeanName， 规则为ServiceBean:interfaceClassName:version:group
         //attributes存的是@Reference注解中所配置的额属性和值
         //referencedBeanName为 ServiceBean:org.apache.dubbo.demo.DemoService
-        //referencedBeanName表示我现在要引用的这个服务，它到处时对应的serviceBean的beanname
+        //referencedBeanName表示我现在要引用的这个服务，它对应的serviceBean的beanname
         String referencedBeanName = buildReferencedBeanName(attributes, injectedType);
 
         /**
