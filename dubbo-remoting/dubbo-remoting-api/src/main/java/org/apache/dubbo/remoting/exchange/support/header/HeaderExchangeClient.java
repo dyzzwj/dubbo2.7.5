@@ -59,13 +59,20 @@ public class HeaderExchangeClient implements ExchangeClient {
 
         if (startTimer) {
             URL url = client.getUrl();
+            /**
+             * 定时重连定时任务
+             */
             startReconnectTask(url);
+            /**
+             * 消费者定时发送心跳定时任务
+             */
             startHeartBeatTask(url);
         }
     }
 
     @Override
     public CompletableFuture<Object> request(Object request) throws RemotingException {
+        //HeaderExchangeChannel
         return channel.request(request);
     }
 
@@ -111,6 +118,7 @@ public class HeaderExchangeClient implements ExchangeClient {
 
     @Override
     public void send(Object message, boolean sent) throws RemotingException {
+        //HeaderExchangeChannel
         channel.send(message, sent);
     }
 

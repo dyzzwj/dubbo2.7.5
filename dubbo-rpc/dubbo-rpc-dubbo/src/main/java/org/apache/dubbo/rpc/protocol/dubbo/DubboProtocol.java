@@ -249,6 +249,7 @@ public class DubboProtocol extends AbstractProtocol {
         boolean isCallBackServiceInvoke = false;
         boolean isStubServiceInvoke = false;
         int port = channel.getLocalAddress().getPort();
+        //接口名
         String path = inv.getAttachments().get(PATH_KEY);
 
         // if it's callback service on client side
@@ -291,9 +292,11 @@ public class DubboProtocol extends AbstractProtocol {
         URL url = invoker.getUrl();
 
         // export service.
+        //根据group、version、接口名生成servicekey
         String key = serviceKey(url);
         // 构造一个Exporter进行服务导出
         DubboExporter<T> exporter = new DubboExporter<T>(invoker, key, exporterMap);
+
         exporterMap.put(key, exporter);
 
         //export an stub service for dispatching event
@@ -468,6 +471,9 @@ public class DubboProtocol extends AbstractProtocol {
             shareClients = getSharedClient(url, connections);
         }
 
+        /**
+         * 为什么不直接是NettyClient 因为dubbo协议还支持mina
+         */
         ExchangeClient[] clients = new ExchangeClient[connections];
         for (int i = 0; i < clients.length; i++) {
             // 如果使用共享的，则利用shareClients
@@ -642,6 +648,7 @@ public class DubboProtocol extends AbstractProtocol {
         ExchangeClient client;
         try {
             // connection should be lazy
+            //服务与引入时先不建立连接 调用服务时才建立连接
             if (url.getParameter(LAZY_CONNECT_KEY, false)) {
                 client = new LazyConnectExchangeClient(url, requestHandler);
 

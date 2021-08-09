@@ -256,6 +256,10 @@ public abstract class Wrapper {
         cc.addMethod(c1.toString());
         cc.addMethod(c2.toString());
         cc.addMethod(c3.toString());
+        System.out.println("wrapper类：");
+        System.out.println(c1.toString());
+        System.out.println(c2.toString());
+        System.out.println(c3.toString());
 
         try {
             Class<?> wc = cc.toClass();

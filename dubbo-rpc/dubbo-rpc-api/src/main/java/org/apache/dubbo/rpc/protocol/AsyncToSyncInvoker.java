@@ -51,11 +51,13 @@ public class AsyncToSyncInvoker<T> implements Invoker<T> {
     public Result invoke(Invocation invocation) throws RpcException {
         // 异步转同步
 
+
         Result asyncResult = invoker.invoke(invocation);  // AsyncRpcResult--->CompletableFuture--->DefaultFuure
 
         try {
             // 如果invocation指定是同步的，则阻塞等待结果
             if (InvokeMode.SYNC == ((RpcInvocation) invocation).getInvokeMode()) {
+                //阻塞等待
                 asyncResult.get(Integer.MAX_VALUE, TimeUnit.MILLISECONDS);
             }
         } catch (InterruptedException e) {

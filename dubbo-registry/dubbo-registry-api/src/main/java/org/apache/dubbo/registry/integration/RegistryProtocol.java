@@ -128,6 +128,7 @@ public class RegistryProtocol implements Protocol {
     //To solve the problem of RMI repeated exposure port conflicts, the services that have been exposed are no longer exposed.
     //providerurl <--> exporter
     private final ConcurrentMap<String, ExporterChangeableWrapper<?>> bounds = new ConcurrentHashMap<>();
+    //依赖注入，注入进来的是Cluster的Adaptive类
     private Cluster cluster;
     private Protocol protocol;
     private RegistryFactory registryFactory;
@@ -242,7 +243,7 @@ public class RegistryProtocol implements Protocol {
         // 得到注册中心-ZookeeperRegistry
         final Registry registry = getRegistry(originInvoker);
 
-        // 得到存入到注册中心去的providerUrl,会对服务提供者url中的参数进行简化
+        // 得到存入到注册中心去的providerUrl,会对服务提供者url中的参数进行简化（删除一些不需要的参数）
         final URL registeredProviderUrl = getRegisteredProviderUrl(providerUrl, registryUrl);
 
         // 将当前服务提供者Invoker，以及该服务对应的注册中心地址，以及简化后的服务url存入ProviderConsumerRegTable
@@ -527,6 +528,9 @@ public class RegistryProtocol implements Protocol {
                 PROVIDERS_CATEGORY + "," + CONFIGURATORS_CATEGORY + "," + ROUTERS_CATEGORY));
 
         // 利用传进来的cluster，join得到invoker, MockClusterWrapper
+        /**
+         * 创建RegistryProtocol的时候会进行依赖注入，注入进来的是Cluster的Adaptive类
+         */
         Invoker invoker = cluster.join(directory);
         ProviderConsumerRegTable.registerConsumer(invoker, url, subscribeUrl, directory);
         return invoker;

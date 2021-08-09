@@ -47,7 +47,11 @@ public class HeartbeatTimerTask extends AbstractTimerTask {
                     || (lastWrite != null && now() - lastWrite > heartbeat)) {
                 Request req = new Request();
                 req.setVersion(Version.getProtocolVersion());  // ping,pong
+                /**
+                 * 心跳是ping-pong模式  客户端需要发送心跳给服务端 服务端也需要响应给客户端
+                 */
                 req.setTwoWay(true);
+
                 req.setEvent(Request.HEARTBEAT_EVENT);
                 channel.send(req);
                 if (logger.isDebugEnabled()) {
