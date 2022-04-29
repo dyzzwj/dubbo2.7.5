@@ -1,0 +1,68 @@
+
+一、java spi机制
+SPI的全名为Service Provider Interface，面向对象的设计里面，模块之间推荐基于接口编程，而不是对实现类进行硬编码，
+这样做也是为了模块设计的可拔插原则。为了在模块装配的时候不在程序里指明是哪个实现，就需要一种服务发现的机制，
+jdk的spi就是为某个接口寻找服务实现。jdk提供了服务实现查找的工具类：java.util.ServiceLoader，它会去加载META-INF/service/目录下的配置文件。
+具体的内部实现逻辑为这里先不展开，主要还是讲解dubbo关于spi的实现原理
+
+二、dubbo spi机制
+dubbo自己实现了一套SPI机制，改进了JDK标准的SPI机制：
+
+1、JDK标准的SPI只能通过遍历来查找扩展点和实例化，有可能导致一次性加载所有的扩展点，如果不是所有的扩展点都被用到，就会导致资源的浪费。
+dubbo每个扩展点都有多种实现，例如com.alibaba.dubbo.rpc.Protocol接口有InjvmProtocol、DubboProtocol、RmiProtocol、HttpProtocol、HessianProtocol等实现，
+如果只是用到其中一个实现，可是加载了全部的实现，会导致资源的浪费。
+2、把配置文件中扩展实现的格式修改，例如META-INF/dubbo/com.xxx.Protocol里的com.foo.XxxProtocol格式改为了xxx = com.foo.XxxProtocol这种以键值对的形式，
+这样做的目的是为了让我们更容易的定位到问题，比如由于第三方库不存在，无法初始化，导致无法加载扩展名（“A”），当用户配置使用A时，dubbo就会报无法加载扩展名的错误，
+而不是报哪些扩展名的实现加载失败以及错误原因，这是因为原来的配置格式没有把扩展名的id记录，导致dubbo无法抛出较为精准的异常，这会加大排查问题的难度。所以改成key-value的形式来进行配置。
+3、dubbo的SPI机制增加了对IOC、AOP的支持，一个扩展点可以直接通过setter注入到其他扩展点
+
+三、dubbo spi实现
+1、注解@SPI
+在某个接口上加上@SPI注解后，表明该接口为可扩展接口。我用协议扩展接口Protocol来举例子，
+如果使用者在<dubbo:protocol />、<dubbo:service />、<dubbo:reference />都没有指定protocol属性的话，那么就会默认DubboProtocol就是接口Protocol，
+因为在Protocol上有@SPI("dubbo")注解。而这个protocol属性值或者默认值会被当作该接口的实现类中的一个key，
+dubbo会去META-INF/dubbo/internal/com.alibaba.dubbo.rpc.Protocol文件中找该key对应的value
+
+2、注解@Adaptive
+  该注解为了保证dubbo在内部调用具体实现的时候不是硬编码来指定引用哪个实现，也就是为了适配一个接口的多种实现，这样做符合模块接口设计的可插拔原则，
+  也增加了整个框架的灵活性，该注解也实现了扩展点自动装配的特性
+
+  2.1 在实现类上面加上@Adaptive注解，表明该实现类是该接口的适配器。
+      举个例子dubbo中的ExtensionFactory接口就有一个实现类AdaptiveExtensionFactory，加了@Adaptive注解，AdaptiveExtensionFactory就不提供具体业务支持，
+      用来适配ExtensionFactory的SpiExtensionFactory和SpringExtensionFactory这两种实现。
+      AdaptiveExtensionFactory会根据在运行时的一些状态来选择具体调用ExtensionFactory的哪个实现，具体的选择可以看下文Adaptive的代码解析。
+
+  2.2 在接口方法上加@Adaptive注解，dubbo会动态生成适配器类
+   见 TransporterAdaptive
+
+3 注解@Activate
+扩展点自动激活加载的注解，就是用条件来控制该扩展点实现是否被自动激活加载，在扩展实现类上面使用，<u>实现了扩展点自动激活的特性，它可以设置两个参数，分别是group和value。具体的介绍可以参照官方文档。
+
+4、接口ExtensionFactory
+该接口是扩展工厂接口类，它本身也是一个扩展接口，有SPI的注解。该工厂接口提供的就是获取实现类的实例，它也有两种扩展实现，
+分别是SpiExtensionFactory和SpringExtensionFactory代表着两种不同方式去获取实例。而具体选择哪种方式去获取实现类的实例，则在适配器AdaptiveExtensionFactory中制定了规则。具体规则看下面的源码解析
+
+5、ExtensionLoader
+该类是扩展加载器，这是dubbo实现SPI扩展机制等核心，几乎所有实现的逻辑都被封装在ExtensionLoader中。
+Wrapper类也实现了扩展接口，但是Wrapper类的用途是ExtensionLoader 返回扩展点时，包装在真正的扩展点实现外，这实现了扩展点自动包装的特性。
+通俗点说，就是一个接口有很多的实现类，这些实现类会有一些公共的逻辑，如果在每个实现类写一遍这个公共逻辑，那么代码就会重复，所以增加了这个Wrapper类来包装，
+把公共逻辑写到Wrapper类中，有点类似AOP切面编程思想
+
+6、AdaptiveExtensionFactory
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

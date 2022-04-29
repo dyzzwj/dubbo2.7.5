@@ -21,6 +21,8 @@ import org.apache.dubbo.common.extension.Adaptive;
 import org.apache.dubbo.common.extension.SPI;
 
 /**
+ *
+ *
  * RegistryFactory. (SPI, Singleton, ThreadSafe)
  *
  * @see org.apache.dubbo.registry.support.AbstractRegistryFactory
@@ -29,6 +31,10 @@ import org.apache.dubbo.common.extension.SPI;
 public interface RegistryFactory {
 
     /**
+     *
+     * 该接口是一个可扩展接口，可以看到该接口上有个@SPI注解，并且默认值为dubbo，也就是默认扩展的是DubboRegistryFactory，
+     * 并且可以在getRegistry方法上可以看到有@Adaptive注解，那么该接口会动态生成一个适配器RegistryFactory$Adaptive，
+     * 并且会去首先扩展url.protocol的值对应的实现类。
      * Connect to the registry
      * <p>
      * Connecting the registry needs to support the contract: <br>

@@ -70,24 +70,29 @@ import static org.apache.dubbo.registry.Constants.UNSUBSCRIBE;
 public class MulticastRegistry extends FailbackRegistry {
 
     // logging output
+    // 日志记录输出
     private static final Logger logger = LoggerFactory.getLogger(MulticastRegistry.class);
-
+    // 默认的多点广播端口
     private static final int DEFAULT_MULTICAST_PORT = 1234;
-
+    // 多点广播的地址
     private final InetAddress multicastAddress;
-
+    // 多点广播
+    /**
+     * 是muticast注册中心实现的关键，这里补充一下单播、广播、以及多播的区别，因为下面会涉及到。单播是每次只有两个实体相互通信，发送端和接收端都是唯一确定的；
+     * 广播目的地址为网络中的全体目标，而多播的目的地址是一组目标，加入该组的成员均是数据包的目的地。
+     */
     private final MulticastSocket multicastSocket;
-
+    // 多点广播端口
     private final int multicastPort;
-
+    //收到的URL
     private final ConcurrentMap<URL, Set<URL>> received = new ConcurrentHashMap<URL, Set<URL>>();
-
+    // 任务调度器
     private final ScheduledExecutorService cleanExecutor = Executors.newScheduledThreadPool(1, new NamedThreadFactory("DubboMulticastRegistryCleanTimer", true));
-
+    // 定时清理执行器，一定时间清理过期的url
     private final ScheduledFuture<?> cleanFuture;
-
+    // 清理的间隔时间
     private final int cleanPeriod;
-
+    // 管理员权限
     private volatile boolean admin = false;
 
     public MulticastRegistry(URL url) {
@@ -98,23 +103,27 @@ public class MulticastRegistry extends FailbackRegistry {
         try {
             multicastAddress = InetAddress.getByName(url.getHost());
             checkMulticastAddress(multicastAddress);
-
+            // 如果url携带的配置中没有端口号，则使用默认端口号
             multicastPort = url.getPort() <= 0 ? DEFAULT_MULTICAST_PORT : url.getPort();
             multicastSocket = new MulticastSocket(multicastPort);
+            //禁用多播数据报的本地环回并加入同一组广播
             NetUtils.joinMulticastGroup(multicastSocket, multicastAddress);
             Thread thread = new Thread(new Runnable() {
                 @Override
                 public void run() {
                     byte[] buf = new byte[2048];
+                    // 实例化数据报
                     DatagramPacket recv = new DatagramPacket(buf, buf.length);
                     while (!multicastSocket.isClosed()) {
                         try {
+                            // 接收数据包
                             multicastSocket.receive(recv);
                             String msg = new String(recv.getData()).trim();
                             int i = msg.indexOf('\n');
                             if (i > 0) {
                                 msg = msg.substring(0, i).trim();
                             }
+                            // 接收消息请求，根据消息并相应操作，比如注册，订阅等
                             MulticastRegistry.this.receive(msg, (InetSocketAddress) recv.getSocketAddress());
                             Arrays.fill(buf, (byte) 0);
                         } catch (Throwable e) {
@@ -125,17 +134,23 @@ public class MulticastRegistry extends FailbackRegistry {
                     }
                 }
             }, "DubboMulticastRegistryReceiver");
+            // 设置为守护进程
             thread.setDaemon(true);
+            //启动线程
             thread.start();
         } catch (IOException e) {
             throw new IllegalStateException(e.getMessage(), e);
         }
+        // 优先从url中获取清理延迟配置，若没有，则默认为60s
         this.cleanPeriod = url.getParameter(SESSION_TIMEOUT_KEY, DEFAULT_SESSION_TIMEOUT);
+        // 如果配置了需要清理
         if (url.getParameter("clean", true)) {
+            // 开启计时器
             this.cleanFuture = cleanExecutor.scheduleWithFixedDelay(new Runnable() {
                 @Override
                 public void run() {
                     try {
+                        // 清理过期的服务
                         clean(); // Remove the expired
                     } catch (Throwable t) { // Defensive fault tolerance
                         logger.error("Unexpected exception occur at clean expired provider, cause: " + t.getMessage(), t);
@@ -164,13 +179,16 @@ public class MulticastRegistry extends FailbackRegistry {
      * Remove the expired providers, only when "clean" parameter is true.
      */
     private void clean() {
+        // 当url中携带的服务接口配置为是*时候，才可以执行清理
         if (admin) {
             for (Set<URL> providers : new HashSet<Set<URL>>(received.values())) {
                 for (URL url : new HashSet<URL>(providers)) {
+                    // 判断是否过期
                     if (isExpired(url)) {
                         if (logger.isWarnEnabled()) {
                             logger.warn("Clean expired provider " + url);
                         }
+                        //取消注册
                         doUnregister(url);
                     }
                 }
@@ -179,12 +197,16 @@ public class MulticastRegistry extends FailbackRegistry {
     }
 
     private boolean isExpired(URL url) {
+        // 如果为非动态管理模式或者协议是consumer、route或者override，则没有过期
         if (!url.getParameter(DYNAMIC_KEY, true) || url.getPort() <= 0 || CONSUMER_PROTOCOL.equals(url.getProtocol()) || ROUTE_PROTOCOL.equals(url.getProtocol()) || OVERRIDE_PROTOCOL.equals(url.getProtocol())) {
             return false;
         }
+        // 利用url携带的主机地址和端口号实例化socket
         try (Socket socket = new Socket(url.getHost(), url.getPort())) {
         } catch (Throwable e) {
+            // 如果实例化失败，等待100ms重试第二次，如果还失败，则判定已过期
             try {
+                // 等待100ms
                 Thread.sleep(100);
             } catch (Throwable e2) {
             }
@@ -200,23 +222,32 @@ public class MulticastRegistry extends FailbackRegistry {
         if (logger.isInfoEnabled()) {
             logger.info("Receive multicast message: " + msg + " from " + remoteAddress);
         }
+        // 如果这个消息是以register、unregister、subscribe开头的，则进行相应的操作
         if (msg.startsWith(REGISTER)) {
             URL url = URL.valueOf(msg.substring(REGISTER.length()).trim());
+            //注册
             registered(url);
         } else if (msg.startsWith(UNREGISTER)) {
             URL url = URL.valueOf(msg.substring(UNREGISTER.length()).trim());
+            //取消注册
             unregistered(url);
         } else if (msg.startsWith(SUBSCRIBE)) {
             URL url = URL.valueOf(msg.substring(SUBSCRIBE.length()).trim());
+            // 获得已经注册的url集合
             Set<URL> urls = getRegistered();
             if (CollectionUtils.isNotEmpty(urls)) {
                 for (URL u : urls) {
+                    //判断是否合法
                     if (UrlUtils.isMatch(url, u)) {
                         String host = remoteAddress != null && remoteAddress.getAddress() != null ? remoteAddress.getAddress().getHostAddress() : url.getIp();
+                        // 建议服务提供者和服务消费者在不同机器上运行，如果在同一机器上，需设置unicast=false
+                        // 同一台机器中的多个进程不能单播，或者只有一个进程接收信息，发给消费者的单播消息可能被提供者抢占，两个消费者在同一台机器也一样，
+                        // 只有multicast注册中心有此问题
                         if (url.getParameter("unicast", true) // Whether the consumer's machine has only one process
                                 && !NetUtils.getLocalHost().equals(host)) { // Multiple processes in the same machine cannot be unicast with unicast or there will be only one process receiving information
                             unicast(REGISTER + " " + u.toFullString(), host);
                         } else {
+
                             multicast(REGISTER + " " + u.toFullString());
                         }
                     }
@@ -226,13 +257,16 @@ public class MulticastRegistry extends FailbackRegistry {
         }*/
     }
 
+
     private void multicast(String msg) {
         if (logger.isInfoEnabled()) {
             logger.info("Send multicast message: " + msg + " to " + multicastAddress + ":" + multicastPort);
         }
         try {
             byte[] data = (msg + "\n").getBytes();
+            // 实例化数据报,重点是目的地址是mutilcastAddress
             DatagramPacket hi = new DatagramPacket(data, data.length, multicastAddress, multicastPort);
+            //发送数据报
             multicastSocket.send(hi);
         } catch (Exception e) {
             throw new IllegalStateException(e.getMessage(), e);
@@ -245,7 +279,9 @@ public class MulticastRegistry extends FailbackRegistry {
         }
         try {
             byte[] data = (msg + "\n").getBytes();
+            // 实例化数据报,重点是目的地址是只是单个地址
             DatagramPacket hi = new DatagramPacket(data, data.length, InetAddress.getByName(host), multicastPort);
+            // 发送数据报
             multicastSocket.send(hi);
         } catch (Exception e) {
             throw new IllegalStateException(e.getMessage(), e);
@@ -264,12 +300,14 @@ public class MulticastRegistry extends FailbackRegistry {
 
     @Override
     public void doSubscribe(URL url, final NotifyListener listener) {
+        // 当url中携带的服务接口配置为是*时候，才可以执行清理，类似管理员权限
         if (ANY_VALUE.equals(url.getServiceInterface())) {
             admin = true;
         }
         multicast(SUBSCRIBE + " " + url.toFullString());
         synchronized (listener) {
             try {
+                //等待
                 listener.wait(url.getParameter(TIMEOUT_KEY, DEFAULT_TIMEOUT));
             } catch (InterruptedException e) {
             }
@@ -300,16 +338,20 @@ public class MulticastRegistry extends FailbackRegistry {
     public void destroy() {
         super.destroy();
         try {
+            // 取消清理任务
             ExecutorUtil.cancelScheduledFuture(cleanFuture);
         } catch (Throwable t) {
             logger.warn(t.getMessage(), t);
         }
         try {
+            // 把该地址从组内移除
             multicastSocket.leaveGroup(multicastAddress);
+            // 关闭mutilcastSocket
             multicastSocket.close();
         } catch (Throwable t) {
             logger.warn(t.getMessage(), t);
         }
+        //关闭线程池
         ExecutorUtil.gracefulShutdown(cleanExecutor, cleanPeriod);
     }
 

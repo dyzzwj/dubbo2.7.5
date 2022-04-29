@@ -108,6 +108,10 @@ import static org.apache.dubbo.rpc.cluster.Constants.WEIGHT_KEY;
 
 /**
  * RegistryProtocol
+ *  是Protocol接口等扩展类，但是它可以认为并不是一个真正的协议，他是实际的协议（dubbo . rmi）包装者，
+ *  这样客户端的请求在一开始如果没有服务端的信息，会先从注册中心拉取服务的注册信息，然后再和服务端直连。
+ *  RegistryProtocol是基于注册中心发现服务提供者的实现协议。
+ *
  */
 public class RegistryProtocol implements Protocol {
     public static final String[] DEFAULT_REGISTER_PROVIDER_KEYS = {

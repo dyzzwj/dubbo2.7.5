@@ -45,9 +45,11 @@ public abstract class AbstractRegistryFactory implements RegistryFactory {
     private static final Logger LOGGER = LoggerFactory.getLogger(AbstractRegistryFactory.class);
 
     // The lock for the acquisition process of the registry
+    // 锁，对REGISTRIES访问对竞争控制
     private static final ReentrantLock LOCK = new ReentrantLock();
 
     // Registry Collection Map<RegistryAddress, Registry>
+    // Registry 集合
     private static final Map<String, Registry> REGISTRIES = new HashMap<>();
 
     /**
@@ -63,6 +65,7 @@ public abstract class AbstractRegistryFactory implements RegistryFactory {
      * Close all created registries
      */
     // TODO: 2017/8/30 to move somewhere else better
+    // 获得锁
     public static void destroyAll() {
         if (LOGGER.isInfoEnabled()) {
             LOGGER.info("Close all registries " + getRegistries());
@@ -72,27 +75,35 @@ public abstract class AbstractRegistryFactory implements RegistryFactory {
         try {
             for (Registry registry : getRegistries()) {
                 try {
+                    // 销毁
                     registry.destroy();
                 } catch (Throwable e) {
                     LOGGER.error(e.getMessage(), e);
                 }
             }
+            // 清空缓存
             REGISTRIES.clear();
         } finally {
             // Release the lock
+            // 释放锁
+
             LOCK.unlock();
         }
     }
 
     @Override
     public Registry getRegistry(URL url) {
+        // 修改url
         url = URLBuilder.from(url)
                 .setPath(RegistryService.class.getName())
                 .addParameter(INTERFACE_KEY, RegistryService.class.getName())
                 .removeParameters(EXPORT_KEY, REFER_KEY)
                 .build();
+        // 计算key值
         String key = url.toServiceStringWithoutResolving();
         // Lock the registry access process to ensure a single instance of the registry
+        // 获得锁
+
         LOCK.lock();
         try {
             Registry registry = REGISTRIES.get(key);
@@ -100,10 +111,12 @@ public abstract class AbstractRegistryFactory implements RegistryFactory {
                 return registry;
             }
             //create registry by spi/ioc
+            // 创建Registry对象
             registry = createRegistry(url);
             if (registry == null) {
                 throw new IllegalStateException("Can not create registry " + url);
             }
+            //添加到缓存
             REGISTRIES.put(key, registry);
             return registry;
         } finally {

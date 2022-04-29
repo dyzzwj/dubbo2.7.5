@@ -32,15 +32,17 @@ import java.util.List;
 public class AdaptiveExtensionFactory implements ExtensionFactory {
 
     /**
-     *  //扩展对象的集合，默认的可以分为dubbo 的SPI中接口实现类对象或者Spring bean对象
+     *  扩展对象的集合，默认的可以分为dubbo 的SPI中接口实现类对象或者Spring bean对象
      */
     private final List<ExtensionFactory> factories;
 
     public AdaptiveExtensionFactory() {
         // 支持哪些ExtensionFactory (Spi, SPring)
+        //f当用户没有自己实现ExtensionFactory接口，只会有两种对象，分别是 SpiExtensionFactory 和 SpringExtensionFactory
         ExtensionLoader<ExtensionFactory> loader = ExtensionLoader.getExtensionLoader(ExtensionFactory.class);
 
         List<ExtensionFactory> list = new ArrayList<ExtensionFactory>();
+
         //遍历所有支持的扩展名
         for (String name : loader.getSupportedExtensions()) { // spi, spring
             //扩展对象加入到集合中

@@ -1,0 +1,70 @@
+服务注册、服务发现
+
+一、RegistryService
+
+1、注册，这里强调一点，就是注释中讲到的允许URI相同但参数不同的URL并存，不能覆盖，也就是说url值必须唯一的，不能有一模一样。
+  void register(URL url);
+
+2、取消注册，该方法也很简单，就是取消注册，这里强调按全URL匹配取消注册。
+  void unregister(URL url);
+
+3、订阅，这里不是根据全URL匹配订阅的，而是根据条件去订阅，也就是说可以订阅多个服务。listener是用来监听处理注册数据变更的事件。
+  void subscribe(URL url, NotifyListener listener);
+
+4、取消订阅，这是按照全URL匹配去取消订阅的。
+  void unsubscribe(URL url, NotifyListener listener);
+
+5、查询注册列表，通过url进行条件查询所匹配的所有URL集合。
+
+  List<URL> lookup(URL url);
+
+二、Registry
+把节点以及注册中心服务的方法整合在了这个接口里面
+
+三、RegistryFactory
+注册中心的工厂接口，用来返回注册中心的对象
+
+四、NotifyListener
+
+
+五、support包下的AbstractRegistry
+  AbstractRegistry实现的是Registry接口，是Registry的抽象类。为了减轻注册中心的压力，在该类中实现了把本地URL缓存到property文件中的机制，并且实现了注册中心的注册、订阅等方法。
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

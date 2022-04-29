@@ -59,6 +59,8 @@ public class ExecutorUtil {
         final ExecutorService es = (ExecutorService) executor;
         try {
             // Disable new tasks from being submitted
+            // 停止接收新的任务并且等待已经提交的任务（包含提交正在执行和提交未执行）执行完成
+            // 当所有提交任务执行完毕，线程池即被关闭
             es.shutdown();
         } catch (SecurityException ex2) {
             return;
@@ -67,7 +69,10 @@ public class ExecutorUtil {
         }
         try {
             // Wait a while for existing tasks to terminate
+            // 当等待超过设定时间时，会监测ExecutorService是否已经关闭，如果没关闭，再关闭一次
             if (!es.awaitTermination(timeout, TimeUnit.MILLISECONDS)) {
+                // 试图停止所有正在执行的线程，不再处理还在池队列中等待的任务
+                // ShutdownNow()并不代表线程池就一定立即就能退出，它可能必须要等待所有正在执行的任务都执行完成了才能退出。
                 es.shutdownNow();
             }
         } catch (InterruptedException ex) {

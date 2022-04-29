@@ -21,7 +21,7 @@ package org.apache.dubbo.common;
  */
 public interface Node {
 
-    /**
+    /** 获得节点地址
      * get url.
      *
      * @return url.
@@ -29,6 +29,7 @@ public interface Node {
     URL getUrl();
 
     /**
+     * 判断节点是否可用
      * is available.
      *
      * @return available.

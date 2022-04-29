@@ -26,24 +26,28 @@ import java.util.Collection;
 
 /**
  * RegistryStatusChecker
- *
+ * 跟注册中心有关的状态检查和设置
  */
 @Activate
 public class RegistryStatusChecker implements StatusChecker {
 
     @Override
     public Status check() {
+        // 获得所有的注册中心对象
         Collection<Registry> registries = AbstractRegistryFactory.getRegistries();
         if (registries.isEmpty()) {
             return new Status(Status.Level.UNKNOWN);
         }
         Status.Level level = Status.Level.OK;
         StringBuilder buf = new StringBuilder();
+        // 拼接注册中心url中的地址
         for (Registry registry : registries) {
             if (buf.length() > 0) {
                 buf.append(",");
             }
+
             buf.append(registry.getUrl().getAddress());
+            // 如果注册中心的节点不可用，则拼接disconnected，并且状态设置为error
             if (!registry.isAvailable()) {
                 level = Status.Level.ERROR;
                 buf.append("(disconnected)");
@@ -51,6 +55,7 @@ public class RegistryStatusChecker implements StatusChecker {
                 buf.append("(connected)");
             }
         }
+        // 返回状态检查结果
         return new Status(level, buf.toString());
     }
 
