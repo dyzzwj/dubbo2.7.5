@@ -44,17 +44,23 @@ import static org.apache.dubbo.remoting.Constants.TICKS_PER_WHEEL;
  */
 public class HeaderExchangeClient implements ExchangeClient {
 
+    //客户端
     private final Client client;
+    //信息交换通道
     private final ExchangeChannel channel;
-
+    //定时器
     private static final HashedWheelTimer IDLE_CHECK_TIMER = new HashedWheelTimer(
             new NamedThreadFactory("dubbo-client-idleCheck", true), 1, TimeUnit.SECONDS, TICKS_PER_WHEEL);
+    /**
+     * 心跳定时任务
+     */
     private HeartbeatTimerTask heartBeatTimerTask;
     private ReconnectTimerTask reconnectTimerTask;
 
     public HeaderExchangeClient(Client client, boolean startTimer) {
         Assert.notNull(client, "Client can't be null");
         this.client = client;
+        // 创建信息交换通道
         this.channel = new HeaderExchangeChannel(client);
 
         if (startTimer) {
@@ -186,6 +192,7 @@ public class HeaderExchangeClient implements ExchangeClient {
     private void startHeartBeatTask(URL url) {
         if (!client.canHandleIdle()) {
             AbstractTimerTask.ChannelProvider cp = () -> Collections.singletonList(HeaderExchangeClient.this);
+            //获得心跳周期配置，如果没有配置 则这只为1分钟，否则设置为0
             int heartbeat = getHeartbeat(url);
             long heartbeatTick = calculateLeastDuration(heartbeat);
             this.heartBeatTimerTask = new HeartbeatTimerTask(cp, heartbeatTick, heartbeat);
@@ -195,9 +202,12 @@ public class HeaderExchangeClient implements ExchangeClient {
 
     private void startReconnectTask(URL url) {
         if (shouldReconnect(url)) {
+            // 返回一个只包含HeaderExchangeClient对象的不可变列表
             AbstractTimerTask.ChannelProvider cp = () -> Collections.singletonList(HeaderExchangeClient.this);
+            //获取心跳周期配置和心跳超时配置
             int idleTimeout = getIdleTimeout(url);
             long heartbeatTimeoutTick = calculateLeastDuration(idleTimeout);
+
             this.reconnectTimerTask = new ReconnectTimerTask(cp, heartbeatTimeoutTick, idleTimeout);
             IDLE_CHECK_TIMER.newTimeout(reconnectTimerTask, heartbeatTimeoutTick, TimeUnit.MILLISECONDS);
         }

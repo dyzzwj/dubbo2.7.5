@@ -44,9 +44,10 @@ import static org.apache.dubbo.common.constants.CommonConstants.THREADPOOL_KEY;
  * AbstractClient
  */
 public abstract class AbstractClient extends AbstractEndpoint implements Client {
-
+    //
     protected static final String CLIENT_THREAD_POOL_NAME = "DubboClientHandler";
     private static final Logger logger = LoggerFactory.getLogger(AbstractClient.class);
+    //连接锁
     private final Lock connectLock = new ReentrantLock();
     private final boolean needReconnect;
     protected volatile ExecutorService executor;
@@ -57,6 +58,7 @@ public abstract class AbstractClient extends AbstractEndpoint implements Client 
         needReconnect = url.getParameter(Constants.SEND_RECONNECT_KEY, false);
 
         try {
+            //打开客户端
             doOpen();
         } catch (Throwable t) {
             close();
@@ -65,6 +67,7 @@ public abstract class AbstractClient extends AbstractEndpoint implements Client 
                             + " connect to the server " + getRemoteAddress() + ", cause: " + t.getMessage(), t);
         }
         try {
+            //连接服务器
             // connect.
             connect();
             if (logger.isInfoEnabled()) {
@@ -88,14 +91,17 @@ public abstract class AbstractClient extends AbstractEndpoint implements Client 
         // 得到消费端的线程池
         executor = (ExecutorService) ExtensionLoader.getExtensionLoader(DataStore.class)
                 .getDefaultExtension().get(CONSUMER_SIDE, Integer.toString(url.getPort()));
-
+        // 清除线程池缓存
         ExtensionLoader.getExtensionLoader(DataStore.class)
                 .getDefaultExtension().remove(CONSUMER_SIDE, Integer.toString(url.getPort()));
     }
 
     protected static ChannelHandler wrapChannelHandler(URL url, ChannelHandler handler) {
+        // 加入线程名称
         url = ExecutorUtil.setThreadName(url, CLIENT_THREAD_POOL_NAME);
+        // 设置使用的线程池类型
         url = url.addParameterIfAbsent(THREADPOOL_KEY, DEFAULT_CLIENT_THREADPOOL);
+        //包装
         return ChannelHandlers.wrap(handler, url);
     }
 
@@ -176,8 +182,9 @@ public abstract class AbstractClient extends AbstractEndpoint implements Client 
         if (channel == null || !channel.isConnected()) {
             throw new RemotingException(this, "message can not send, because channel is closed . url:" + getUrl());
         }
-        //sent 默认是false
-        //NettyChannel.send
+        //sent值为true，等待消息发出，消息发送失败将抛出异常。
+        //sent值为false，不等待消息发出，将消息放入 IO 队列，即刻返回。默认false
+        // NettyChannel.send
         channel.send(message, sent);
     }
 

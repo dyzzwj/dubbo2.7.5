@@ -28,7 +28,7 @@ import org.apache.dubbo.remoting.transport.ChannelHandlerDispatcher;
 public class Transporters {
 
     static {
-        // check duplicate jar package
+        // 检查重复的 jar 包
         Version.checkDuplicate(Transporters.class);
         Version.checkDuplicate(RemotingException.class);
     }
@@ -56,6 +56,7 @@ public class Transporters {
             handler = new ChannelHandlerDispatcher(handlers);
         }
 
+        // 调用Transporter的实现类对象的bind方法。
         // 调用NettyTransporter去绑定，Transporter表示网络传输层
         return getTransporter().bind(url, handler);
     }
@@ -76,7 +77,8 @@ public class Transporters {
         } else {
             handler = new ChannelHandlerDispatcher(handlers);
         }
-        // NettyTransporter
+        // 调用Transporter的实现类对象的connect方法。
+        // 例如实现NettyTransporter，则调用NettyTransporter的connect，并且返回相应的client
         return getTransporter().connect(url, handler);
     }
 

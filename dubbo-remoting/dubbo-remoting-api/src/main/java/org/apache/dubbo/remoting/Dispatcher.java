@@ -28,6 +28,7 @@ import org.apache.dubbo.remoting.transport.dispatcher.all.AllDispatcher;
 public interface Dispatcher {
 
     /**
+     *  调度
      * dispatch the message to threadpool.
      *
      * @param handler

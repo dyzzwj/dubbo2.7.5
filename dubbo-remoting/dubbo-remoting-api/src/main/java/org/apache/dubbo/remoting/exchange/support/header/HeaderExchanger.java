@@ -36,6 +36,7 @@ public class HeaderExchanger implements Exchanger {
 
     @Override
     public ExchangeClient connect(URL url, ExchangeHandler handler) throws RemotingException {
+        // 用传输层连接返回的client 创建对应的信息交换客户端，默认开启心跳检测
         // 利用NettyTransporter去connect
         // 为什么在connect和bind时都是DecodeHandler，解码，解的是把InputStream解析成AppResponse对象
         return new HeaderExchangeClient(Transporters.connect(url, new DecodeHandler(new HeaderExchangeHandler(handler))), true);
@@ -44,6 +45,7 @@ public class HeaderExchanger implements Exchanger {
     @Override
     public ExchangeServer bind(URL url, ExchangeHandler handler) throws RemotingException {
 
+        // 用传输层绑定返回的server 创建对应的信息交换服务端
         // 下面会去启动Netty
         // 对handler包装了两层，表示当处理一个请求时，每层Handler负责不同的处理逻辑
         // 为什么在connect和bind时都是DecodeHandler，解码，解的是把InputStream解析成RpcInvocation对象

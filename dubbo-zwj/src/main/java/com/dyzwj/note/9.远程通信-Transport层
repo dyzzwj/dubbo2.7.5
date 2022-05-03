@@ -1,0 +1,101 @@
+介绍dubbo-remoting-api中的transport包内的源码解析。
+一、Transport层
+Transport层也就是网络传输层，在远程通信中必然会涉及到传输。它在dubbo 的框架设计中也处于倒数第二层，当然最底层是序列化，
+这个后面介绍。官方文档对Transport层的解释是抽象 mina 和 netty 为统一接口，以 Message 为中心，
+扩展接口为 Channel、Transporter、Client、Server、Codec。
+
+二、AbstractPeer
+
+
+三、AbstractEndpoint
+
+四、AbstractServer
+该类继承了AbstractEndpoint并且实现Server接口，是服务器抽象类。重点实现了服务器的公共逻辑，比如发送消息，关闭通道，连接通道，断开连接等。并且抽象了打开和关闭服务器两个方法。
+
+五、AbstractClient
+该类是客户端的抽象类，继承了AbstractEndpoint类，实现了Client接口，该类中也是做了客户端公用的重连逻辑，抽象了打开客户端、关闭客户端、连接服务器、断开服务器连接以及获得通道方法，让子类去重点关注这几个方法。
+
+
+六、AbstractChannel
+
+
+七、ChannelHandlerDelegate
+该类继承了ChannelHandler，从它的名字可以看出是ChannelHandler的代表，它就是作为装饰模式中的Component角色，后面讲到的AbstractChannelHandlerDelegate作为装饰模式中的Decorator角色
+
+八、AbstractChannelHandlerDelegate
+该类实现了ChannelHandlerDelegate接口，并且有一个属性是ChannelHandler，上述已经说到这是装饰模式中的装饰角色，其中的所有实现方法都直接调用被装饰的handler属性的方法。
+
+九、DecodeHandler
+该类为解码处理器，继承了AbstractChannelHandlerDelegate，对接收到的消息进行解码，在父类处理接收消息的功能上叠加了解码功能。
+
+十、MultiMessageHandler
+该类是多消息处理器的抽象类。同样继承了AbstractChannelHandlerDelegate类
+
+十一、WrappedChannelHandler
+该类跟AbstractChannelHandlerDelegate的作用类似，都是装饰模式中的装饰角色，其中的所有实现方法都直接调用被装饰的handler属性的方法，
+该类是为了添加线程池的功能，它的子类都是去关心哪些消息是需要分发到线程池的，哪些消息直接由I / O线程执行，现在版本有四种场景，也就是它的四个子类，
+
+
+十二、ExecutionChannelHandler
+该类继承了WrappedChannelHandler，也是增强了功能，处理的是接收请求消息时，把请求消息分发到线程池，而除了请求消息以外，其他消息类型都直接通过I / O线程直接执行。
+
+十三、AllChannelHandler
+该类也继承了WrappedChannelHandler，也是为了增强功能，处理的是连接、断开连接、捕获异常以及接收到的所有消息都分发到线程池。
+
+十四、ConnectionOrderedChannelHandler
+该类也是继承了WrappedChannelHandler，增强功能，该类是把连接、取消连接以及接收到的消息都分发到线程池，
+但不同的是，该类自己创建了一个跟连接相关的线程池，把连接操作和断开连接操分发到该线程池，而接收到的消息则分发到WrappedChannelHandler的线程池中。
+
+十五、MessageOnlyChannelHandler
+该类也是继承了WrappedChannelHandler，是WrappedChannelHandler的最后一个子类，也是增强功能，不过该类只是处理了所有的消息分发到线程池
+
+
+十六、AllDispatcher
+对应AllChannelHandler
+
+十七、ConnectionOrderedDispatcher
+对应ConnectionOrderedChannelHandler
+
+十八、DirectDispatcher
+该线程池调度方法是不调度线程池，直接执行。
+
+十九、ExecutionDispatcher
+对应ExecutionChannelHandler
+
+二十、MessageOnlyDispatcher
+对应MessageOnlyChannelHandler
+
+二十一、ChannelHandlers
+该类是通道处理器工厂，会对传入的handler进行一次包装，无论是Client还是Server都会做这样的处理，也就是做了一些功能上的增强
+
+二十二、AbstractCodec
+实现 Codec2 接口，，其中实现了一些编解码的公共逻辑。
+
+
+二十三、TransportCodec
+该类是传输编解码器，使用 Serialization 进行序列化/反序列化，直接编解码
+
+二十四、CodecAdapter
+该类是Codec 的适配器，用到了适配器模式，把Codec适配成Codec2。将Codec的编码和解码方法都适配成Codec2。比如很多时候都只能用Codec2的编解码器，但是有的时候需要用Codec，但是不能满足导致只能加入适配器来完成使用
+
+二十五、ChannelDelegate、ServerDelegate、ClientDelegate
+ChannelDelegate实现类Channel，ServerDelegate实现了Server，ClientDelegate实现了Client，都用到了装饰模式，都作为装饰模式中的装饰角色，所以类中的所有实现方法都调用了属性的方法。具体代码就不贴了，朋友们可以自行查看。
+
+二十六、ChannelHandlerAdapter
+该类实现了ChannelHandler接口，是通道处理器适配类，该类中所有实现方法都是空的，所有想实现ChannelHandler接口的类可以直接继承该类，选择需要实现的方法进行实现，不需要实现ChannelHandler接口中所有方法。
+
+二十七、ChannelHandlerDispatcher
+该类是通道处理器调度器，其中缓存了所有通道处理器，有一个通道处理器集合。并且每个操作都会去遍历该集合，执行相应的操作
+
+二十八、CodecSupport
+该类是编解码工具类，提供查询 Serialization 的功能。
+
+二十九、ExceedPayloadLimitException
+该类是消息长度限制异常。
+
+
+
+
+
+
+

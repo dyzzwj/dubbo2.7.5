@@ -1,0 +1,40 @@
+一、redis注册中心
+duubo-registry-redis模块
+Redis是一个key-value存储系统，交换数据非常快，redis以内存作为数据存储的介质，所以读写数据的效率极高，远远超过数据库。
+redis支持丰富的数据类型，dubbo就利用了redis的value支持map的数据类型。redis的key为服务名称和服务的类型。
+map中的key为URL地址，map中的value为过期时间，用于判断脏数据，脏数据由监控中心删除。
+
+       /dubbo/xxx.xx.XxxService/providers: 以hash类型存放所有提供者列表, 每个hash的字段为 url -> expireTime
+　　　　/dubbo/xxx.xx.XxxService/consumers: 以hash类型存放所有消费者列表, 每个hash的字段为 url -> expireTime
+　　　　/dubbo/xxx.xx.XxxService/configurators: 存放配置信息
+　　　　/dubbo/xxx.xx.XxxService/routers: 存放路由配置信息
+
+
+二、RedisRegistry
+
+
+三、RedisRegistryFactory
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

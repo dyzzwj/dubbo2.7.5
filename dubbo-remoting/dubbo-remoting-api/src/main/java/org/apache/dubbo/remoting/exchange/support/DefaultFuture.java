@@ -46,8 +46,14 @@ public class DefaultFuture extends CompletableFuture<Object> {
 
     private static final Logger logger = LoggerFactory.getLogger(DefaultFuture.class);
 
+    /**
+     * 通道集合
+     */
     private static final Map<Long, Channel> CHANNELS = new ConcurrentHashMap<>();
 
+    /**
+     * Future集合，key为请求编号
+     */
     private static final Map<Long, DefaultFuture> FUTURES = new ConcurrentHashMap<>();
 
     public static final Timer TIME_OUT_TIMER = new HashedWheelTimer(
@@ -56,17 +62,36 @@ public class DefaultFuture extends CompletableFuture<Object> {
             TimeUnit.MILLISECONDS);
 
     // invoke id.
+    /**
+     * 请求编号
+     */
     private final Long id;
+    /**
+     * 通道
+     */
     private final Channel channel;
+    /**
+     * 请求
+     */
     private final Request request;
+    /**
+     * 超时
+     */
     private final int timeout;
+    /**
+     * 创建开始时间
+     */
     private final long start = System.currentTimeMillis();
+    /**
+     * 发送请求时间
+     */
     private volatile long sent;
     private Timeout timeoutCheckTask;
 
     private DefaultFuture(Channel channel, Request request, int timeout) {
         this.channel = channel;
         this.request = request;
+        // 设置请求编号
         this.id = request.getId();
         this.timeout = timeout > 0 ? timeout : channel.getUrl().getPositiveParameter(TIMEOUT_KEY, DEFAULT_TIMEOUT);
         // put into waiting map.
@@ -127,16 +152,20 @@ public class DefaultFuture extends CompletableFuture<Object> {
      * @param channel channel to close
      */
     public static void closeChannel(Channel channel) {
+        // 遍历通道集合
         for (Map.Entry<Long, Channel> entry : CHANNELS.entrySet()) {
             if (channel.equals(entry.getValue())) {
+                // 通过请求id获得future
                 DefaultFuture future = getFuture(entry.getKey());
                 if (future != null && !future.isDone()) {
+                    // 创建一个关闭通道的响应
                     Response disconnectResponse = new Response(future.getId());
                     disconnectResponse.setStatus(Response.CHANNEL_INACTIVE);
                     disconnectResponse.setErrorMessage("Channel " +
                             channel +
                             " is inactive. Directly return the unFinished request : " +
                             future.getRequest());
+                    // 接收该关闭通道并且请求未完成的响应
                     DefaultFuture.received(channel, disconnectResponse);
                 }
             }
@@ -150,6 +179,7 @@ public class DefaultFuture extends CompletableFuture<Object> {
     public static void received(Channel channel, Response response, boolean timeout) {
         try {
             // response的id，
+            // future集合中移除该请求的future，（响应id和请求id一一对应的）
             DefaultFuture future = FUTURES.remove(response.getId());
             if (future != null) {
                 //
@@ -161,6 +191,7 @@ public class DefaultFuture extends CompletableFuture<Object> {
                      */
                     t.cancel();
                 }
+                // 接收响应结果
                 future.doReceived(response);
             } else {
                 logger.warn("The timeout response finally returned at "
@@ -170,6 +201,7 @@ public class DefaultFuture extends CompletableFuture<Object> {
                         + " -> " + channel.getRemoteAddress()));
             }
         } finally {
+            // 通道集合移除该请求对应的通道，代表着这一次请求结束
             CHANNELS.remove(response.getId());
         }
     }

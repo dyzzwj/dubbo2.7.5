@@ -19,6 +19,7 @@ package org.apache.dubbo.remoting;
 
 public interface Decodeable {
 
+    //解码
     public void decode() throws Exception;
 
 }

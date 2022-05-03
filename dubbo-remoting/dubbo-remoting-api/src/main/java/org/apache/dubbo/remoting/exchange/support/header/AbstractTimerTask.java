@@ -30,6 +30,9 @@ import java.util.concurrent.TimeUnit;
  */
 public abstract class AbstractTimerTask implements TimerTask {
 
+    /**
+     * 通道管理
+     */
     private final ChannelProvider channelProvider;
 
     private final Long tick;

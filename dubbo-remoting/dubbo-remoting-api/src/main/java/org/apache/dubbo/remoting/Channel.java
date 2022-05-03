@@ -28,6 +28,7 @@ import java.net.InetSocketAddress;
 public interface Channel extends Endpoint {
 
     /**
+     *  获得远程地址
      * get remote address.
      *
      * @return remote address.
@@ -36,12 +37,13 @@ public interface Channel extends Endpoint {
 
     /**
      * is connected.
-     *
+     *  判断通道是否连接
      * @return connected
      */
     boolean isConnected();
 
     /**
+     *  判断是否有该key的值
      * has attribute.
      *
      * @param key key.
@@ -50,6 +52,7 @@ public interface Channel extends Endpoint {
     boolean hasAttribute(String key);
 
     /**
+     *  获得该key对应的值
      * get attribute.
      *
      * @param key key.
@@ -58,6 +61,7 @@ public interface Channel extends Endpoint {
     Object getAttribute(String key);
 
     /**
+     *  设置属性
      * set attribute.
      *
      * @param key   key.
@@ -66,6 +70,7 @@ public interface Channel extends Endpoint {
     void setAttribute(String key, Object value);
 
     /**
+     *  删除属性
      * remove attribute.
      *
      * @param key key.

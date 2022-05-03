@@ -64,8 +64,10 @@ public class ChannelHandlerDispatcher implements ChannelHandler {
 
     @Override
     public void connected(Channel channel) {
+        // 遍历通道处理器集合
         for (ChannelHandler listener : channelHandlers) {
             try {
+                //连接
                 listener.connected(channel);
             } catch (Throwable t) {
                 logger.error(t.getMessage(), t);

@@ -53,7 +53,8 @@ public class ReconnectTimerTask extends AbstractTimerTask {
                     logger.error("Fail to connect to " + channel, e);
                 }
             // check pong at client
-                //如果很久没有发送数据
+                // 如果最后一次接收消息的时间到现在已经超过了超时时间
+
                 //客户端接收到服务端的心跳响应后 会更新 lastRead
             } else if (lastRead != null && now - lastRead > idleTimeout) {
                 logger.warn("Reconnect to channel " + channel + ", because heartbeat read idle time out: "

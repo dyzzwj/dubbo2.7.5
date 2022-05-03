@@ -31,6 +31,7 @@ import java.util.Collection;
 public interface Server extends Endpoint, Resetable, IdleSensible {
 
     /**
+     *     判断是否绑定到本地端口，也就是该服务器是否启动成功，能够连接、接收消息，提供服务。
      * is bound.
      *
      * @return bound
@@ -38,6 +39,7 @@ public interface Server extends Endpoint, Resetable, IdleSensible {
     boolean isBound();
 
     /**
+     *  获得连接该服务器的通道
      * get channels.
      *
      * @return channels
@@ -45,6 +47,7 @@ public interface Server extends Endpoint, Resetable, IdleSensible {
     Collection<Channel> getChannels();
 
     /**
+     *  通过远程地址获得该地址对应的通道
      * get channel.
      *
      * @param remoteAddress

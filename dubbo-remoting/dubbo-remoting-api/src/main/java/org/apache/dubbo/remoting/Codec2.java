@@ -25,14 +25,17 @@ import java.io.IOException;
 @SPI
 public interface Codec2 {
 
+    //编码 用到了Adaptive机制，首先去url中寻找key为codec的value，来加载url携带的配置中指定的codec的实现。
     @Adaptive({Constants.CODEC_KEY})
     void encode(Channel channel, ChannelBuffer buffer, Object message) throws IOException;
 
+    //解码
     @Adaptive({Constants.CODEC_KEY})
     Object decode(Channel channel, ChannelBuffer buffer) throws IOException;
 
-
+    //因为解码过程中，需要解决 TCP 拆包、粘包的场景，所以增加了这两种解码结果
     enum DecodeResult {
+        // 需要更多输入和忽略一些输入
         NEED_MORE_INPUT, SKIP_SOME_INPUT
     }
 
