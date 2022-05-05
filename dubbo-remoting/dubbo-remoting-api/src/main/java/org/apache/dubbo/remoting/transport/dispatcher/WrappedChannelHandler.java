@@ -50,6 +50,7 @@ public class WrappedChannelHandler implements ChannelHandlerDelegate {
     public WrappedChannelHandler(ChannelHandler handler, URL url) {
         this.handler = handler;
         this.url = url;
+        //创建线程池
         executor = (ExecutorService) ExtensionLoader.getExtensionLoader(ThreadPool.class).getAdaptiveExtension().getExecutor(url);
 
         // 如果是服务提供者，componentKey为java.util.concurrent.ExecutorService
@@ -62,6 +63,7 @@ public class WrappedChannelHandler implements ChannelHandlerDelegate {
         // DataStore底层就是一个map，存储的格式是这样的:{"java.util.concurrent.ExecutorService":{"20880":executor}}
         // 这里记录了干嘛？应该是在请求处理的时候会用到
         DataStore dataStore = ExtensionLoader.getExtensionLoader(DataStore.class).getDefaultExtension();
+        // 把线程池放到dataStore中缓存
         dataStore.put(componentKey, Integer.toString(url.getPort()), executor);
     }
 
@@ -118,6 +120,7 @@ public class WrappedChannelHandler implements ChannelHandlerDelegate {
     }
 
     public ExecutorService getExecutorService() {
+        // 如果该类的线程池关闭或者为空，则返回的是共享线程池
         return executor == null || executor.isShutdown() ? SHARED_EXECUTOR : executor;
     }
 

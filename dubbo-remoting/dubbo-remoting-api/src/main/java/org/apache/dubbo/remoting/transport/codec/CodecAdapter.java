@@ -40,6 +40,7 @@ public class CodecAdapter implements Codec2 {
     public void encode(Channel channel, ChannelBuffer buffer, Object message)
             throws IOException {
         UnsafeByteArrayOutputStream os = new UnsafeByteArrayOutputStream(1024);
+        // 调用旧的编解码器的编码
         codec.encode(channel, os, message);
         buffer.writeBytes(os.toByteArray());
     }
@@ -50,6 +51,7 @@ public class CodecAdapter implements Codec2 {
         int savedReaderIndex = buffer.readerIndex();
         buffer.readBytes(bytes);
         UnsafeByteArrayInputStream is = new UnsafeByteArrayInputStream(bytes);
+        // 调用旧的编解码器的解码
         Object result = codec.decode(channel, is);
         buffer.readerIndex(savedReaderIndex + is.position());
         return result == Codec.NEED_MORE_INPUT ? DecodeResult.NEED_MORE_INPUT : result;

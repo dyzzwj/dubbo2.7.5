@@ -27,8 +27,14 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class ReplierDispatcher implements Replier<Object> {
 
+    /**
+     * 默认回复者
+     */
     private final Replier<?> defaultReplier;
 
+    /**
+     * 回复者集合
+     */
     private final Map<Class<?>, Replier<?>> repliers = new ConcurrentHashMap<Class<?>, Replier<?>>();
 
     public ReplierDispatcher() {
@@ -56,6 +62,11 @@ public class ReplierDispatcher implements Replier<Object> {
         return this;
     }
 
+    /**
+     *  从回复者集合中找到该类型的回复者，并且返回
+     * @param type
+     * @return
+     */
     private Replier<?> getReplier(Class<?> type) {
         for (Map.Entry<Class<?>, Replier<?>> entry : repliers.entrySet()) {
             if (entry.getKey().isAssignableFrom(type)) {

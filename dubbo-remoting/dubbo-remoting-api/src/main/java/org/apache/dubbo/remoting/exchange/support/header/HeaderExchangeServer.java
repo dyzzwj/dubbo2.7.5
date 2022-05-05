@@ -53,9 +53,18 @@ public class HeaderExchangeServer implements ExchangeServer {
 
     protected final Logger logger = LoggerFactory.getLogger(getClass());
 
+    /**
+     * 服务器
+     */
     private final Server server;
+    /**
+     * 信息交换服务器是否关闭
+     */
     private AtomicBoolean closed = new AtomicBoolean(false);
 
+    /**
+     * 心跳定时器
+     */
     private static final HashedWheelTimer IDLE_CHECK_TIMER = new HashedWheelTimer(new NamedThreadFactory("dubbo-server-idleCheck", true), 1,
             TimeUnit.SECONDS, TICKS_PER_WHEEL);
 
@@ -79,13 +88,14 @@ public class HeaderExchangeServer implements ExchangeServer {
 
     private boolean isRunning() {
         Collection<Channel> channels = getChannels();
+        // 遍历所有连接该服务器的通道
         for (Channel channel : channels) {
 
             /**
              *  If there are any client connections,
              *  our server should be running.
              */
-
+            // 只要有任何一个客户端连接，则服务器还运行着
             if (channel.isConnected()) {
                 return true;
             }
@@ -95,19 +105,25 @@ public class HeaderExchangeServer implements ExchangeServer {
 
     @Override
     public void close() {
+        // 关闭线程池和心跳检测
         doClose();
+        // 关闭服务器
         server.close();
     }
 
     @Override
     public void close(final int timeout) {
+        // 开始关闭
         startClose();
+
         if (timeout > 0) {
             final long max = (long) timeout;
             final long start = System.currentTimeMillis();
             if (getUrl().getParameter(Constants.CHANNEL_SEND_READONLYEVENT_KEY, true)) {
+                // 发送 READONLY_EVENT事件给所有连接该服务器的客户端，表示 Server 不可读了。
                 sendChannelReadOnlyEvent();
             }
+            // 当服务器还在运行，并且没有超时，睡眠，也就是等待timeout左右时间在进行关闭
             while (HeaderExchangeServer.this.isRunning()
                     && System.currentTimeMillis() - start < max) {
                 try {
@@ -117,6 +133,8 @@ public class HeaderExchangeServer implements ExchangeServer {
                 }
             }
         }
+        // 关闭线程池和心跳检测
+
         doClose();
         server.close(timeout);
     }
@@ -127,14 +145,19 @@ public class HeaderExchangeServer implements ExchangeServer {
     }
 
     private void sendChannelReadOnlyEvent() {
+        // 创建一个READONLY_EVENT事件的请求
         Request request = new Request();
         request.setEvent(Request.READONLY_EVENT);
+        // 不需要响应
         request.setTwoWay(false);
+        // 设置版本
         request.setVersion(Version.getProtocolVersion());
 
         Collection<Channel> channels = getChannels();
+        // 遍历连接的通道，进行通知
         for (Channel channel : channels) {
             try {
+                // 通过通道还连接着，则发送通知
                 if (channel.isConnected()) {
                     channel.send(request, getUrl().getParameter(Constants.CHANNEL_READONLYEVENT_SENT_KEY, true));
                 }
@@ -148,6 +171,7 @@ public class HeaderExchangeServer implements ExchangeServer {
         if (!closed.compareAndSet(false, true)) {
             return;
         }
+        // 停止心跳检测
         cancelCloseTask();
     }
 
@@ -160,9 +184,11 @@ public class HeaderExchangeServer implements ExchangeServer {
     @Override
     public Collection<ExchangeChannel> getExchangeChannels() {
         Collection<ExchangeChannel> exchangeChannels = new ArrayList<ExchangeChannel>();
+        // 获得连接该服务器通道集合
         Collection<Channel> channels = server.getChannels();
         if (CollectionUtils.isNotEmpty(channels)) {
             for (Channel channel : channels) {
+                // 遍历通道集合，为每个通道都创建信息交换通道，并且加入信息交换通道集合
                 exchangeChannels.add(HeaderExchangeChannel.getOrAddChannel(channel));
             }
         }
@@ -208,14 +234,18 @@ public class HeaderExchangeServer implements ExchangeServer {
 
     @Override
     public void reset(URL url) {
+        // 重置属性
         server.reset(url);
         try {
+            // 重置的逻辑跟构造函数一样设置
             int currHeartbeat = getHeartbeat(getUrl());
             int currIdleTimeout = getIdleTimeout(getUrl());
             int heartbeat = getHeartbeat(url);
             int idleTimeout = getIdleTimeout(url);
             if (currHeartbeat != heartbeat || currIdleTimeout != idleTimeout) {
                 cancelCloseTask();
+                // 重新开始心跳
+
                 startIdleCheckTask(url);
             }
         } catch (Throwable t) {

@@ -1,0 +1,29 @@
+一、注册中心-zookeeper
+1、dubbo的Root层是根目录，通过<dubbo:registry group="dubbo" />的“group”来设置zookeeper的根节点，缺省值是“dubbo”。
+2、Service层是服务接口的全名。
+3、Type层是分类，一共有四种分类，分别是providers（服务提供者列表）、consumers（服务消费者列表）、routes（路由规则列表）、configurations（配置规则列表）。
+4、URL层：根据不同的Type目录：可以有服务提供者 URL 、服务消费者 URL 、路由规则 URL 、配置规则 URL 。不同的Type关注的URL不同。
+
+二、ZookeeperRegistry
+
+
+三、ZookeeperRegistryFactory
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

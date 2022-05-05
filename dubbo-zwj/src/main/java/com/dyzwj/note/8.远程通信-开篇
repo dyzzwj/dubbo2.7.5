@@ -1,0 +1,81 @@
+一、dubbo-remoting-api模块
+1、buffer包：缓冲在NIO框架中是很重要的存在，各个NIO框架都实现了自己相应的缓存操作。这个buffer包下包括了缓冲区的接口以及抽象
+2、exchange包：信息交换层，其中封装了请求响应模式，在传输层之上重新封装了 Request-Response 语义，为了满足RPC的需求。这层可以认为专注在Request和Response携带的信息上。该层是RPC调用的通讯基础之一。
+3、telnet包：dubbo支持通过telnet命令来进行服务治理，该包下就封装了这些通用指令的逻辑实现。
+4、transport包：网络传输层，它只负责单向消息传输，是对 Mina, Netty, Grizzly 的抽象，它也可以扩展 UDP 传输。该层是RPC调用的通讯基础之一。
+5、最外层的源码：该部分我会在下面之间给出介绍。
+
+二、Endpoint
+dubbo抽象出一个端的概念，也就是Endpoint接口，这个端就是一个点，而点对点之间是可以双向传输。在端的基础上在衍生出通道、客户端以及服务端的概念，
+也就是下面要介绍的Channel、Client、Server三个接口。在传输层，其实Client和Server的区别只是在语义上区别，并不区分请求和应答职责，
+在交换层客户端和服务端也是一个点，但是已经是有方向的点，所以区分了明确的请求和应答职责。两者都具备发送的能力，只是客户端和服务端所关注的事情不一样，
+这个在后面会分开介绍，而Endpoint接口抽象的方法就是它们共同拥有的方法。这也就是它们都能被抽象成端的原因。
+
+三、Channel
+该接口是通道接口，通道是通讯的载体。还是用自动贩卖机的例子，自动贩卖机就好比是一个通道，消息发送端会往通道输入消息，而接收端会从通道读消息。
+并且接收端发现通道没有消息，就去做其他事情了，不会造成阻塞。所以channel可以读也可以写，并且可以异步读写。
+channel是client和server的传输桥梁。channel和client是一一对应的，也就是一个client对应一个channel，但是channel和server是多对一对关系，
+也就是一个server可以对应多个channel。
+
+四、ChannelHandler
+该接口是负责channel中的逻辑处理，并且可以看到这个接口有注解@SPI，是个可扩展接口，到时候都会在下面介绍各类NIO框架的时候会具体讲到它的实现类。
+
+五、Client
+客户端接口，可以看到它继承了Endpoint、Channel和Resetable接口，继承Endpoint的原因上面我已经提到过了，客户端和服务端其实只是语义上的不同，
+客户端就是一个点。继承Channel是因为客户端跟通道是一一对应的，所以做了这样的设计，还继承了Resetable接口是为了实现reset方法，
+该方法，不过已经打上@Deprecated注解，不推荐使用。除了这些客户端就只需要关注一个重连的操作。
+
+六、Server
+该接口是服务端接口，继承了Endpoint和Resetable，继承Endpoint是因为服务端也是一个点，继承Resetable接口是为了继承reset方法。
+除了这些以外，服务端独有的是检测是否启动成功，还有事获得连接该服务器上所有通道，这里获得所有通道其实就意味着获得了所有连接该服务器的客户端，
+因为客户端和通道是一一对应的。
+
+七、Codec && Codec2
+这两个都是编解码器，那么什么叫做编解码器，在网络中只是讲数据看成是原始的字节序列，但是我们的应用程序会把这些字节组织成有意义的信息，
+那么网络字节流和数据间的转化就是很常见的任务。而编码器是讲应用程序的数据转化为网络格式，解码器则是讲网络格式转化为应用程序，
+同时具备这两种功能的单一组件就叫编解码器。在dubbo中Codec是老的编解码器接口，而Codec2是新的编解码器接口，
+并且dubbo已经用CodecAdapter把Codec适配成Codec2了。所以在这里我就介绍Codec2接口，毕竟人总要往前看。
+
+
+八、Decodeable
+该接口是可解码的接口，该接口有两个作用，第一个是在调用真正的decode方法实现的时候会有一些校验，判断是否可以解码，并且对解码失败会有一些消息设置；第二个是被用来message核对用的。后面看具体的实现会更了解该接口的作用。
+
+九、Dispatcher
+该接口是调度器接口，dispatch是线程池的调度方法，这边有几个注意点：
+1、该接口是一个可扩展接口，并且默认实现AllDispatcher，也就是所有消息都派发到线程池，包括请求，响应，连接事件，断开事件，心跳等。
+2、用了Adaptive注解，也就是按照URL中配置来加载实现类，后面两个参数是为了兼容老版本，如果这是三个key对应的值都为空，就选择AllDispatcher来实现。
+
+十、Transporter
+该接口是网络传输接口，有以下几个注意点：
+1、该接口是一个可扩展的接口，并且默认实现NettyTransporter。
+2、用了dubbo SPI扩展机制中的Adaptive注解，加载对应的bind方法，使用url携带的server或者transporter属性值，加载对应的connect方法，使用url携带的client或者transporter属性值
+
+十一、Transporters
+1、该类用到了设计模式的外观模式，通过该类的包装，我们就不会看到内部具体的实现细节，这样降低了程序的复杂度，也提高了程序的可维护性。
+比如这个类，包装了调用各种实现Transporter接口的方法，通过getTransporter来获得Transporter的实现对象，具体实现哪个实现类，
+取决于url中携带的配置信息，如果url中没有相应的配置，则默认选择@SPI中的默认值netty。
+2、bind和connect方法分别有两个重载方法，其中的操作只是把把字符串的url转化为URL对象。
+3、静态代码块中检测了一下jar包是否有重复。
+
+
+十二、RemotingException && ExecutionException && TimeoutException
+   这三个类是远程通信的异常类：
+   RemotingException继承了Exception类，是远程通信的基础异常。
+   ExecutionException继承了RemotingException类，ExecutionException是远程通信的执行异常。
+   TimeoutException继承了RemotingException类，TimeoutException是超时异常。
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

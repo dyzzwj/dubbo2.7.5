@@ -30,6 +30,10 @@ public class HeartbeatTimerTask extends AbstractTimerTask {
 
     private static final Logger logger = LoggerFactory.getLogger(HeartbeatTimerTask.class);
 
+
+    /**
+     * 心跳间隔 单位：ms
+     */
     private final int heartbeat;
 
     HeartbeatTimerTask(ChannelProvider channelProvider, Long heartbeatTick, int heartbeat) {
@@ -41,18 +45,24 @@ public class HeartbeatTimerTask extends AbstractTimerTask {
     protected void doTask(Channel channel) {
         try {
             System.out.println("发送心跳");
+            // 最后一次接收到消息的时间戳
             Long lastRead = lastRead(channel);
+            // 最后一次发送消息的时间戳
             Long lastWrite = lastWrite(channel);
+            // 如果最后一次接收或者发送消息到时间到现在的时间间隔超过了心跳间隔时间
             if ((lastRead != null && now() - lastRead > heartbeat)
                     || (lastWrite != null && now() - lastWrite > heartbeat)) {
+                // 创建一个request
                 Request req = new Request();
+                // 设置版本号
                 req.setVersion(Version.getProtocolVersion());  // ping,pong
                 /**
                  * 心跳是ping-pong模式  客户端需要发送心跳给服务端 服务端也需要响应给客户端
                  */
                 req.setTwoWay(true);
-
+                // 设置事件类型，为心跳事件
                 req.setEvent(Request.HEARTBEAT_EVENT);
+                //发送心跳请求
                 channel.send(req);
                 if (logger.isDebugEnabled()) {
                     logger.debug("Send heartbeat to remote channel " + channel.getRemoteAddress()

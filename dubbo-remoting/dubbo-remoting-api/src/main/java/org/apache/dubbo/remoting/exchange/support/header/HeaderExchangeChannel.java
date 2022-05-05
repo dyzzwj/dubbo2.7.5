@@ -42,10 +42,13 @@ final class HeaderExchangeChannel implements ExchangeChannel {
 
     private static final Logger logger = LoggerFactory.getLogger(HeaderExchangeChannel.class);
 
+    //通道的key值
     private static final String CHANNEL_KEY = HeaderExchangeChannel.class.getName() + ".CHANNEL";
 
+    //通道 HeaderExchangeChannel是Channel的装饰器，每个实现方法都会调用channel的方法。
     private final Channel channel;
 
+    //是否关闭
     private volatile boolean closed = false;
 
     HeaderExchangeChannel(Channel channel) {
@@ -59,10 +62,14 @@ final class HeaderExchangeChannel implements ExchangeChannel {
         if (ch == null) {
             return null;
         }
+        // 获得通道中的HeaderExchangeChannel
         HeaderExchangeChannel ret = (HeaderExchangeChannel) ch.getAttribute(CHANNEL_KEY);
         if (ret == null) {
+            // 创建一个HeaderExchangeChannel实例
             ret = new HeaderExchangeChannel(ch);
+            // 如果通道连接
             if (ch.isConnected()) {
+                // 加入属性值
                 ch.setAttribute(CHANNEL_KEY, ret);
             }
         }
@@ -70,7 +77,9 @@ final class HeaderExchangeChannel implements ExchangeChannel {
     }
 
     static void removeChannelIfDisconnected(Channel ch) {
+        // 如果通道断开连接
         if (ch != null && !ch.isConnected()) {
+            //移除属性值
             ch.removeAttribute(CHANNEL_KEY);
         }
     }
@@ -82,19 +91,26 @@ final class HeaderExchangeChannel implements ExchangeChannel {
 
     @Override
     public void send(Object message, boolean sent) throws RemotingException {
+        // 如果通道关闭，抛出异常
         if (closed) {
             throw new RemotingException(this.getLocalAddress(), null, "Failed to send message " + message + ", cause: The channel " + this + " is closed!");
         }
+        // 判断消息的类型
         if (message instanceof Request
                 || message instanceof Response
                 || message instanceof String) {
-            //
+            //发送消息
             channel.send(message, sent);
         } else {
+            // 新建一个request实例
             Request request = new Request();
+            // 设置信息的版本
             request.setVersion(Version.getProtocolVersion());
+            // 该请求不需要响应
             request.setTwoWay(false);
+            // 把消息传入
             request.setData(message);
+            //发送消息
             channel.send(request, sent);
         }
     }
@@ -106,13 +122,18 @@ final class HeaderExchangeChannel implements ExchangeChannel {
 
     @Override
     public CompletableFuture<Object> request(Object request, int timeout) throws RemotingException {
+        // 如果通道关闭，抛出异常
         if (closed) {
             throw new RemotingException(this.getLocalAddress(), null, "Failed to send request " + request + ", cause: The channel " + this + " is closed!");
         }
         // create request.
+        //创建request
         Request req = new Request();
+        // 设置版本号
         req.setVersion(Version.getProtocolVersion());
+        // 设置需要响应
         req.setTwoWay(true);
+        // 把请求数据传入
         req.setData(request);
         /**
          *  为  检查请求超时 生成一个定时任务
