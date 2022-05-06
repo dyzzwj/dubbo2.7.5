@@ -50,8 +50,10 @@ public class LogTelnetHandler implements TelnetHandler {
         } else {
             String[] str = message.split(" ");
             if (!StringUtils.isInteger(str[0])) {
+                // 设置日志级别
                 LoggerFactory.setLevel(Level.valueOf(message.toUpperCase()));
             } else {
+                // 获得日志长度
                 int showLogLength = Integer.parseInt(str[0]);
 
                 if (file != null && file.exists()) {
@@ -61,11 +63,15 @@ public class LogTelnetHandler implements TelnetHandler {
                                 size = filechannel.size();
                                 ByteBuffer bb;
                                 if (size <= showLogLength) {
+                                    // 分配缓冲区
                                     bb = ByteBuffer.allocate((int) size);
+                                    // 读日志数据
                                     filechannel.read(bb, 0);
                                 } else {
                                     int pos = (int) (size - showLogLength);
+                                    //分配缓冲区
                                     bb = ByteBuffer.allocate(showLogLength);
+                                    //读日志数据-
                                     filechannel.read(bb, pos);
                                 }
                                 bb.flip();

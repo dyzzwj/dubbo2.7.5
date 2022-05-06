@@ -27,6 +27,7 @@ import org.apache.dubbo.remoting.RemotingException;
 public interface TelnetHandler {
 
     /**
+     *  处理对应的telnet命令
      * telnet.
      *
      * @param channel

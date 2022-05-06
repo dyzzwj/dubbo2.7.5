@@ -30,6 +30,7 @@ public class ExitTelnetHandler implements TelnetHandler {
 
     @Override
     public String telnet(Channel channel, String message) {
+        // 关闭通道
         channel.close();
         return null;
     }

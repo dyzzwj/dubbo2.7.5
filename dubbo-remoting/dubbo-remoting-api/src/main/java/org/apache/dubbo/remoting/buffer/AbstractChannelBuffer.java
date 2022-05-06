@@ -24,12 +24,23 @@ import java.nio.ByteBuffer;
 
 public abstract class AbstractChannelBuffer implements ChannelBuffer {
 
+    /**
+     * 读索引
+     */
     private int readerIndex;
-
+    /**
+     * 写索引
+     */
     private int writerIndex;
 
+    //标记读索引和标记写索引是为了做备份回滚，当对缓冲区进行读写操作时，可能需要对之前的操作进行回滚，我们就需要将当前的读写索引备份到相应的标记索引中。
+    /**
+     * 标记读索引
+     */
     private int markedReaderIndex;
-
+    /**
+     * 标记写索引
+     */
     private int markedWriterIndex;
 
     @Override

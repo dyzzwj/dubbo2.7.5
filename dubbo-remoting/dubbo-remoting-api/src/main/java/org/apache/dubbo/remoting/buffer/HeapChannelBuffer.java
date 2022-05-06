@@ -28,11 +28,13 @@ import java.nio.channels.ScatteringByteChannel;
 public class HeapChannelBuffer extends AbstractChannelBuffer {
 
     /**
+     *  此缓冲区包装的基础堆字节数组
      * The underlying heap byte array that this buffer is wrapping.
      */
     protected final byte[] array;
 
     /**
+     *  使用新分配的字节数组创建新的堆缓冲区。
      * Creates a new heap buffer with a newly allocated byte array.
      *
      * @param length the length of the new byte array
@@ -42,6 +44,7 @@ public class HeapChannelBuffer extends AbstractChannelBuffer {
     }
 
     /**
+     *  使用现有字节数组创建新的堆缓冲区。
      * Creates a new heap buffer with an existing byte array.
      *
      * @param array the byte array to wrap
@@ -51,6 +54,7 @@ public class HeapChannelBuffer extends AbstractChannelBuffer {
     }
 
     /**
+     * 使用现有字节数组创建新的堆缓冲区。
      * Creates a new heap buffer with an existing byte array.
      *
      * @param array       the byte array to wrap

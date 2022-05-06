@@ -23,18 +23,24 @@ import java.io.OutputStream;
 import java.nio.ByteBuffer;
 
 public class ByteBufferBackedChannelBuffer extends AbstractChannelBuffer {
-
+    /**
+     * ByteBuffer实例
+     */
     private final ByteBuffer buffer;
-
+    /**
+     * 容量
+     */
     private final int capacity;
 
     public ByteBufferBackedChannelBuffer(ByteBuffer buffer) {
         if (buffer == null) {
             throw new NullPointerException("buffer");
         }
-
+        // 创建一个新的字节缓冲区，新缓冲区的大小将是此缓冲区的剩余容量
         this.buffer = buffer.slice();
+        // 返回buffer的剩余容量
         capacity = buffer.remaining();
+        // 设置写索引
         writerIndex(capacity);
     }
 
