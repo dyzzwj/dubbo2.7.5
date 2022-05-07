@@ -32,11 +32,13 @@ public class GrizzlyTransporter implements Transporter {
 
     @Override
     public Server bind(URL url, ChannelHandler listener) throws RemotingException {
+        // 返回GrizzlyServer实例
         return new GrizzlyServer(url, listener);
     }
 
     @Override
     public Client connect(URL url, ChannelHandler listener) throws RemotingException {
+        // 返回GrizzlyClient实例
         return new GrizzlyClient(url, listener);
     }
 

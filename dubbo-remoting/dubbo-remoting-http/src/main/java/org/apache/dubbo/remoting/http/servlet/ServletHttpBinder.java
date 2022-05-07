@@ -30,6 +30,7 @@ public class ServletHttpBinder implements HttpBinder {
     @Override
     @Adaptive()
     public HttpServer bind(URL url, HttpHandler handler) {
+        // 创建ServletHttpServer对象
         return new ServletHttpServer(url, handler);
     }
 

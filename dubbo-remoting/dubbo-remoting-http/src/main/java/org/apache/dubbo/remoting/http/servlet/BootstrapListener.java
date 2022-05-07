@@ -27,11 +27,13 @@ public class BootstrapListener implements ServletContextListener {
 
     @Override
     public void contextInitialized(ServletContextEvent servletContextEvent) {
+        // context创建的时候，把ServletContext添加到ServletManager
         ServletManager.getInstance().addServletContext(ServletManager.EXTERNAL_SERVER_PORT, servletContextEvent.getServletContext());
     }
 
     @Override
     public void contextDestroyed(ServletContextEvent servletContextEvent) {
+        // context销毁到时候，把servletContextEvent移除
         ServletManager.getInstance().removeServletContext(ServletManager.EXTERNAL_SERVER_PORT);
     }
 }

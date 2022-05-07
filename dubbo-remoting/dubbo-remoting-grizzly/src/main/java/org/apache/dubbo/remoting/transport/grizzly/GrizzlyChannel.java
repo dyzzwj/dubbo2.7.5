@@ -43,11 +43,18 @@ import static org.apache.dubbo.common.constants.CommonConstants.TIMEOUT_KEY;
 final class GrizzlyChannel extends AbstractChannel {
 
     private static final Logger logger = LoggerFactory.getLogger(GrizzlyChannel.class);
-
+    /**
+     * 通道key
+     */
     private static final String CHANNEL_KEY = GrizzlyChannel.class.getName() + ".CHANNEL";
 
+    /**
+     * 通道属性
+     */
     private static final Attribute<GrizzlyChannel> ATTRIBUTE = Grizzly.DEFAULT_ATTRIBUTE_BUILDER.createAttribute(CHANNEL_KEY);
-
+    /**
+     * Grizzly的连接实例
+     */
     private final Connection<?> connection;
 
     /**
@@ -105,9 +112,12 @@ final class GrizzlyChannel extends AbstractChannel {
 
         int timeout = 0;
         try {
+            // 发送消息，获得GrizzlyFuture实例
             GrizzlyFuture future = connection.write(message);
             if (sent) {
+                // 获得延迟多少时间获得响应
                 timeout = getUrl().getPositiveParameter(TIMEOUT_KEY, DEFAULT_TIMEOUT);
+                // 获得请求的值
                 future.get(timeout, TimeUnit.MILLISECONDS);
             }
         } catch (TimeoutException e) {

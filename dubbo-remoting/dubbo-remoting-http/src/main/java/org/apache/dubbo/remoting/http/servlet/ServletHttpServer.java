@@ -25,6 +25,7 @@ public class ServletHttpServer extends AbstractHttpServer {
 
     public ServletHttpServer(URL url, HttpHandler handler) {
         super(url, handler);
+        //把 HttpHandler 添加到到 DispatcherServlet 中，默认端口为8080
         DispatcherServlet.addHttpHandler(url.getParameter(Constants.BIND_PORT_KEY, 8080), handler);
     }
 

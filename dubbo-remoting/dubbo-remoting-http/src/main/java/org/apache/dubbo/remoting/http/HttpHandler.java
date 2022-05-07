@@ -27,6 +27,7 @@ import java.io.IOException;
 public interface HttpHandler {
 
     /**
+     *  HTTP请求处理
      * invoke.
      *
      * @param request  request.

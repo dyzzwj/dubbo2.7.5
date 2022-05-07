@@ -28,6 +28,7 @@ import org.apache.dubbo.remoting.Constants;
 public interface HttpBinder {
 
     /**
+     *  绑定到服务器
      * bind the server.
      *
      * @param url server url.

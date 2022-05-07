@@ -45,9 +45,13 @@ import static org.apache.dubbo.common.constants.CommonConstants.TIMEOUT_KEY;
 public class GrizzlyClient extends AbstractClient {
 
     private static final Logger logger = LoggerFactory.getLogger(GrizzlyClient.class);
-
+    /**
+     * Grizzly中的传输对象 在GrizzlyClient中实现的客户端方法都调用了transport中的方法，TCPNIOTransport中封装了创建，连接，断开连接等方法。
+     */
     private TCPNIOTransport transport;
-
+    /**
+     * 连接实例
+     */
     private volatile Connection<?> connection; // volatile, please copy reference to use
 
     public GrizzlyClient(URL url, ChannelHandler handler) throws RemotingException {
@@ -56,22 +60,29 @@ public class GrizzlyClient extends AbstractClient {
 
     @Override
     protected void doOpen() throws Throwable {
+        // 做一些过滤，用于处理消息
         FilterChainBuilder filterChainBuilder = FilterChainBuilder.stateless();
         filterChainBuilder.add(new TransportFilter());
         filterChainBuilder.add(new GrizzlyCodecAdapter(getCodec(), getUrl(), this));
         filterChainBuilder.add(new GrizzlyHandler(getUrl(), this));
+        // 传输构建者
         TCPNIOTransportBuilder builder = TCPNIOTransportBuilder.newInstance();
+        // 获得线程池配置实例
         ThreadPoolConfig config = builder.getWorkerThreadPoolConfig();
+        // 设置线程池的配置，包括核心线程数等
         config.setPoolName(CLIENT_THREAD_POOL_NAME)
                 .setQueueLimit(-1)
                 .setCorePoolSize(0)
                 .setMaxPoolSize(Integer.MAX_VALUE)
                 .setKeepAliveTime(60L, TimeUnit.SECONDS);
+        // 设置创建属性
         builder.setTcpNoDelay(true).setKeepAlive(true)
                 .setConnectionTimeout(getConnectTimeout())
                 .setIOStrategy(SameThreadIOStrategy.getInstance());
+        // 创建一个transport
         transport = builder.build();
         transport.setProcessor(filterChainBuilder.build());
+        // 创建客户端
         transport.start();
     }
 

@@ -24,6 +24,7 @@ import java.net.InetSocketAddress;
 public interface HttpServer extends Resetable {
 
     /**
+     * 获得http的处理类
      * get http handler.
      *
      * @return http handler.
@@ -31,6 +32,7 @@ public interface HttpServer extends Resetable {
     HttpHandler getHttpHandler();
 
     /**
+     * 获得url
      * get url.
      *
      * @return url
@@ -38,6 +40,7 @@ public interface HttpServer extends Resetable {
     URL getUrl();
 
     /**
+     *  获得本地服务器地址
      * get local address.
      *
      * @return local address.
@@ -45,16 +48,19 @@ public interface HttpServer extends Resetable {
     InetSocketAddress getLocalAddress();
 
     /**
+     * 关闭通道
      * close the channel.
      */
     void close();
 
     /**
+     * 优雅的关闭通道
      * Graceful close the channel.
      */
     void close(int timeout);
 
     /**
+     * 是否绑定
      * is bound.
      *
      * @return bound
@@ -62,6 +68,7 @@ public interface HttpServer extends Resetable {
     boolean isBound();
 
     /**
+     *  服务器是否关闭
      * is closed.
      *
      * @return closed
