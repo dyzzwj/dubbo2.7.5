@@ -28,6 +28,10 @@ import java.nio.ByteBuffer;
  */
 public class NettyBackedChannelBufferFactory implements ChannelBufferFactory {
 
+
+    /**
+     * 单例
+     */
     private static final NettyBackedChannelBufferFactory INSTANCE = new NettyBackedChannelBufferFactory();
 
     public static ChannelBufferFactory getInstance() {
