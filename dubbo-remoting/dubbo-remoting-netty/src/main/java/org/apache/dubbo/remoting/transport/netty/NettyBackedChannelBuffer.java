@@ -27,7 +27,9 @@ import java.io.OutputStream;
 import java.nio.ByteBuffer;
 
 public class NettyBackedChannelBuffer implements ChannelBuffer {
-
+    /**
+     * 缓冲区
+     */
     private org.jboss.netty.buffer.ChannelBuffer buffer;
 
     public NettyBackedChannelBuffer(org.jboss.netty.buffer.ChannelBuffer buffer) {

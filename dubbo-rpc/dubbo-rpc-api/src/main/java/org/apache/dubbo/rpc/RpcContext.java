@@ -55,6 +55,7 @@ import static org.apache.dubbo.rpc.Constants.RETURN_KEY;
 public class RpcContext {
 
     /**
+     *  本地上下文
      * use internal thread local to improve performance
      */
     // FIXME REQUEST_CONTEXT
@@ -65,6 +66,9 @@ public class RpcContext {
         }
     };
 
+    /**
+     * 服务上下文
+     */
     // FIXME RESPONSE_CONTEXT
     private static final InternalThreadLocal<RpcContext> SERVER_LOCAL = new InternalThreadLocal<RpcContext>() {
         @Override
@@ -72,36 +76,65 @@ public class RpcContext {
             return new RpcContext();
         }
     };
-
+    /**
+     * 附加值集合
+     */
     private final Map<String, String> attachments = new HashMap<String, String>();
+    /**
+     * 上下文值
+     */
     private final Map<String, Object> values = new HashMap<String, Object>();
-
+    /**
+     * url集合
+     */
     private List<URL> urls;
-
+    /**
+     * 当前的url
+     */
     private URL url;
-
+    /**
+     * 方法名称
+     */
     private String methodName;
-
+    /**
+     * 参数类型集合
+     */
     private Class<?>[] parameterTypes;
-
+    /**
+     * 参数集合
+     */
     private Object[] arguments;
-
+    /**
+     * 本地地址
+     */
     private InetSocketAddress localAddress;
-
+    /**
+     * 远程地址
+     */
     private InetSocketAddress remoteAddress;
 
     private String remoteApplicationName;
-
+    /**
+     * 实体域集合
+     */
     @Deprecated
     private List<Invoker<?>> invokers;
+    /**
+     * 实体域
+     */
     @Deprecated
     private Invoker<?> invoker;
+    /**
+     * 会话域
+     */
     @Deprecated
     private Invocation invocation;
 
     // now we don't use the 'values' map to hold these objects
     // we want these objects to be as generic as possible
+    //请求
     private Object request;
+    //响应
     private Object response;
     private AsyncContext asyncContext;
 

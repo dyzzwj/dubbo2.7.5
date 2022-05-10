@@ -25,6 +25,7 @@ import org.apache.dubbo.common.extension.SPI;
 public interface InvokerListener {
 
     /**
+     *  在服务引用的时候进行监听
      * The invoker referred
      *
      * @param invoker
@@ -34,6 +35,7 @@ public interface InvokerListener {
     void referred(Invoker<?> invoker) throws RpcException;
 
     /**
+     *  销毁实体域
      * The invoker destroyed.
      *
      * @param invoker

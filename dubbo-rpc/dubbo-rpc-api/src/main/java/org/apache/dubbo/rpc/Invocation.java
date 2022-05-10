@@ -29,7 +29,7 @@ public interface Invocation {
 
     /**
      * get method name.
-     *
+     * 获得方法名称
      * @return method name.
      * @serial
      */
@@ -37,7 +37,7 @@ public interface Invocation {
 
     /**
      * get parameter types.
-     *
+     * 获得参数类型
      * @return parameter types.
      * @serial
      */
@@ -45,7 +45,7 @@ public interface Invocation {
 
     /**
      * get arguments.
-     *
+     * 获得参数
      * @return arguments.
      * @serial
      */
@@ -53,7 +53,7 @@ public interface Invocation {
 
     /**
      * get attachments.
-     *
+     * 获得附加值集合
      * @return attachments.
      * @serial
      */
@@ -65,7 +65,7 @@ public interface Invocation {
 
     /**
      * get attachment by key.
-     *
+     * 获得附加值
      * @return attachment value.
      * @serial
      */
@@ -73,7 +73,7 @@ public interface Invocation {
 
     /**
      * get attachment by key with default value.
-     *
+     * 获得附加值
      * @return attachment value.
      * @serial
      */
@@ -81,7 +81,7 @@ public interface Invocation {
 
     /**
      * get the invoker in current context.
-     *
+     * 获得当前上下文的invoker
      * @return invoker.
      * @transient
      */

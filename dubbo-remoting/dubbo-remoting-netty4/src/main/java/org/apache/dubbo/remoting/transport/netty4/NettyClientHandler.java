@@ -36,9 +36,13 @@ import io.netty.handler.timeout.IdleStateEvent;
 @io.netty.channel.ChannelHandler.Sharable
 public class NettyClientHandler extends ChannelDuplexHandler {
     private static final Logger logger = LoggerFactory.getLogger(NettyClientHandler.class);
-
+    /**
+     * url对象
+     */
     private final URL url;
-
+    /**
+     * 通道
+     */
     private final ChannelHandler handler;
 
     public NettyClientHandler(URL url, ChannelHandler handler) {
@@ -54,10 +58,13 @@ public class NettyClientHandler extends ChannelDuplexHandler {
 
     @Override
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
+        // 获得通道
         NettyChannel channel = NettyChannel.getOrAddChannel(ctx.channel(), url, handler);
         try {
+            // 连接
             handler.connected(channel);
         } finally {
+            // 从集合中移除
             NettyChannel.removeChannelIfDisconnected(ctx.channel());
         }
 

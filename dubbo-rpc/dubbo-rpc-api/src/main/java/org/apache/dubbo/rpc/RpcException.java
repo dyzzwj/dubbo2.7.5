@@ -27,12 +27,29 @@ import javax.naming.LimitExceededException;
  * @since 1.0
  */
 public /**final**/ class RpcException extends RuntimeException {
-
+    /**
+     * 不知道异常
+     */
     public static final int UNKNOWN_EXCEPTION = 0;
+    /**
+     * 网络异常
+     */
     public static final int NETWORK_EXCEPTION = 1;
+    /**
+     * 超时异常
+     */
     public static final int TIMEOUT_EXCEPTION = 2;
+    /**
+     * 基础异常
+     */
     public static final int BIZ_EXCEPTION = 3;
+    /**
+     * 禁止访问异常
+     */
     public static final int FORBIDDEN_EXCEPTION = 4;
+    /**
+     * 序列化异常
+     */
     public static final int SERIALIZATION_EXCEPTION = 5;
     public static final int NO_INVOKER_AVAILABLE_AFTER_FILTER = 6;
     public static final int LIMIT_EXCEEDED_EXCEPTION = 7;

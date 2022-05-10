@@ -20,6 +20,15 @@ package com.alibaba.dubbo.rpc.service;
 @Deprecated
 public interface GenericService extends org.apache.dubbo.rpc.service.GenericService {
 
+    /**
+     * 通用的会话域
+     * @param method         Method name, e.g. findPerson. If there are overridden methods, parameter info is
+     *                       required, e.g. findPerson(java.lang.String)
+     * @param parameterTypes Parameter types
+     * @param args           Arguments
+     * @return
+     * @throws com.alibaba.dubbo.rpc.service.GenericException
+     */
     @Override
     Object $invoke(String method, String[] parameterTypes, Object[] args)
             throws com.alibaba.dubbo.rpc.service.GenericException;

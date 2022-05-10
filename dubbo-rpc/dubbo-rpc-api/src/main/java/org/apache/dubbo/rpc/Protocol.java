@@ -28,6 +28,7 @@ import org.apache.dubbo.common.extension.SPI;
 public interface Protocol {
 
     /**
+     *  获得默认的端口
      * Get default port when user doesn't config the port.
      *
      * @return default port
@@ -41,7 +42,7 @@ public interface Protocol {
      * 2. export() must be idempotent, that is, there's no difference between invoking once and invoking twice when
      * export the same URL<br>
      * 3. Invoker instance is passed in by the framework, protocol needs not to care <br>
-     *
+     * 暴露服务
      * @param <T>     Service type
      * @param invoker Service invoker
      * @return exporter reference for exported service, useful for unexport the service later
@@ -58,7 +59,7 @@ public interface Protocol {
      * protocol sends remote request in the `Invoker` implementation. <br>
      * 3. When there's check=false set in URL, the implementation must not throw exception but try to recover when
      * connection fails.
-     *
+     * 引用服务方法
      * @param <T>  Service type
      * @param type Service class
      * @param url  URL address for the remote service
