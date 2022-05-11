@@ -48,10 +48,15 @@ public class ExecuteLimitFilter extends ListenableFilter {
 
     @Override
     public Result invoke(Invoker<?> invoker, Invocation invocation) throws RpcException {
+        // 获得url对象
         URL url = invoker.getUrl();
+        // 方法名称
         String methodName = invocation.getMethodName();
+        //获取许可 默认为0
         int max = url.getMethodParameter(methodName, EXECUTES_KEY, 0);
+        // 如果自增后超过了许可数量  即不能获得许可
         if (!RpcStatus.beginCount(url, methodName, max)) {
+            // 则抛出异常
             throw new RpcException(RpcException.LIMIT_EXCEEDED_EXCEPTION,
                     "Failed to invoke method " + invocation.getMethodName() + " in provider " +
                             url + ", cause: The service using threads greater than <dubbo:service executes=\"" + max +
@@ -60,6 +65,7 @@ public class ExecuteLimitFilter extends ListenableFilter {
 
         invocation.setAttachment(EXECUTELIMIT_FILTER_START_TIME, String.valueOf(System.currentTimeMillis()));
         try {
+            // 调用下一个调用链
             return invoker.invoke(invocation);
         } catch (Throwable t) {
             if (t instanceof RuntimeException) {
@@ -73,6 +79,7 @@ public class ExecuteLimitFilter extends ListenableFilter {
     static class ExecuteLimitListener implements Listener {
         @Override
         public void onResponse(Result appResponse, Invoker<?> invoker, Invocation invocation) {
+            // 计数减1
             RpcStatus.endCount(invoker.getUrl(), invocation.getMethodName(), getElapsed(invocation), true);
         }
 

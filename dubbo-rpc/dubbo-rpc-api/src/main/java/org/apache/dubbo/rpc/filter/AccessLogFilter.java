@@ -66,20 +66,32 @@ import static org.apache.dubbo.rpc.Constants.ACCESS_LOG_KEY;
 public class AccessLogFilter implements Filter {
 
     private static final Logger logger = LoggerFactory.getLogger(AccessLogFilter.class);
-
+    /**
+     * 日志访问名称，默认的日志访问名称
+     */
     private static final String LOG_KEY = "dubbo.accesslog";
-
+    /**
+     * 日志队列大小
+     */
     private static final int LOG_MAX_BUFFER = 5000;
-
+    /**
+     * 日志输出的频率
+     */
     private static final long LOG_OUTPUT_INTERVAL = 5000;
-
+    /**
+     * 日期格式
+     */
     private static final String FILE_DATE_FORMAT = "yyyyMMdd";
 
     // It's safe to declare it as singleton since it runs on single thread only
     private static final DateFormat FILE_NAME_FORMATTER = new SimpleDateFormat(FILE_DATE_FORMAT);
-
+    /**
+     * 日志队列 key为访问日志的名称，value为该日志名称对应的日志集合
+     */
     private static final Map<String, Set<AccessLogData>> LOG_ENTRIES = new ConcurrentHashMap<String, Set<AccessLogData>>();
-
+    /**
+     * 日志线程池
+     */
     private static final ScheduledExecutorService LOG_SCHEDULED = Executors.newSingleThreadScheduledExecutor(new NamedThreadFactory("Dubbo-Access-Log", true));
 
     /**
@@ -87,6 +99,7 @@ public class AccessLogFilter implements Filter {
      * defined in url <b>accesslog</b>
      */
     public AccessLogFilter() {
+        //提交定时任务
         LOG_SCHEDULED.scheduleWithFixedDelay(this::writeLogToFile, LOG_OUTPUT_INTERVAL, LOG_OUTPUT_INTERVAL, TimeUnit.MILLISECONDS);
     }
 
@@ -101,6 +114,7 @@ public class AccessLogFilter implements Filter {
     @Override
     public Result invoke(Invoker<?> invoker, Invocation inv) throws RpcException {
         try {
+            // 获得日志名称
             String accessLogKey = invoker.getUrl().getParameter(ACCESS_LOG_KEY);
             if (ConfigUtils.isNotEmpty(accessLogKey)) {
                 AccessLogData logData = buildAccessLogData(invoker, inv);
@@ -112,6 +126,7 @@ public class AccessLogFilter implements Filter {
         return invoker.invoke(inv);
     }
 
+    //该方法是增加日志信息到日志集合中。
     private void log(String accessLog, AccessLogData accessLogData) {
         Set<AccessLogData> logSet = LOG_ENTRIES.computeIfAbsent(accessLog, k -> new ConcurrentHashSet<>());
 
@@ -125,18 +140,22 @@ public class AccessLogFilter implements Filter {
 
     private void writeLogToFile() {
         if (!LOG_ENTRIES.isEmpty()) {
+            // 遍历日志集合
             for (Map.Entry<String, Set<AccessLogData>> entry : LOG_ENTRIES.entrySet()) {
                 try {
+                    //日志名称
                     String accessLog = entry.getKey();
                     Set<AccessLogData> logSet = entry.getValue();
                     if (ConfigUtils.isDefault(accessLog)) {
                         processWithServiceLogger(logSet);
                     } else {
                         File file = new File(accessLog);
+                        // 如果文件不存在则创建文件
                         createIfLogDirAbsent(file);
                         if (logger.isDebugEnabled()) {
                             logger.debug("Append log to " + accessLog);
                         }
+                        //依据当前时间为文件命名
                         renameFile(file);
                         processWithAccessKeyLogger(logSet, file);
                     }
@@ -162,12 +181,19 @@ public class AccessLogFilter implements Filter {
 
     private AccessLogData buildAccessLogData(Invoker<?> invoker, Invocation inv) {
         AccessLogData logData = AccessLogData.newLogData();
+        // 获得调用的接口名称
         logData.setServiceName(invoker.getInterface().getName());
+        //方法名
         logData.setMethodName(inv.getMethodName());
+        //版本号
         logData.setVersion(invoker.getUrl().getParameter(VERSION_KEY));
+        // 获得组，是消费者侧还是生产者侧
         logData.setGroup(invoker.getUrl().getParameter(GROUP_KEY));
+        //时间
         logData.setInvocationTime(new Date());
+        //参数类型
         logData.setTypes(inv.getParameterTypes());
+        //参数值
         logData.setArguments(inv.getArguments());
         return logData;
     }
@@ -190,10 +216,15 @@ public class AccessLogFilter implements Filter {
 
     private void renameFile(File file) {
         if (file.exists()) {
+            // 获得现在的时间
             String now = FILE_NAME_FORMATTER.format(new Date());
+            // 获得文件最后一次修改的时间
             String last = FILE_NAME_FORMATTER.format(new Date(file.lastModified()));
+            // 如果文件最后一次修改的时间不等于现在的时间
             if (!now.equals(last)) {
+                // 获得重新生成文件名称
                 File archive = new File(file.getAbsolutePath() + "." + last);
+                // 因为都是file的绝对路径，所以没有进行移动文件，而是修改文件名
                 file.renameTo(archive);
             }
         }

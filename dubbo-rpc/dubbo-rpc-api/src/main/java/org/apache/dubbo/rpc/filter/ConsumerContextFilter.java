@@ -43,9 +43,17 @@ public class ConsumerContextFilter extends ListenableFilter {
         super.listener = new ConsumerContextListener();
     }
 
+
+    /**
+     * RpcContext记录了一次调用状态信息，然后先调用后面的调用链，再回来把附加值设置到RpcContext中。然后返回RpcContext，再清空，这样是因为后面的调用链中的附加值对前面的调用链是不可见的。
+     * @param invoker
+     * @param invocation
+     * @return
+     * @throws RpcException
+     */
     @Override
     public Result invoke(Invoker<?> invoker, Invocation invocation) throws RpcException {
-        // 设置RpcContext参数
+        // 设置rpc上下文
         RpcContext.getContext()
                 .setInvoker(invoker)
                 .setInvocation(invocation)
@@ -53,12 +61,14 @@ public class ConsumerContextFilter extends ListenableFilter {
                 .setRemoteAddress(invoker.getUrl().getHost(), invoker.getUrl().getPort())
                 .setRemoteApplicationName(invoker.getUrl().getParameter(REMOTE_APPLICATION_KEY))
                 .setAttachment(REMOTE_APPLICATION_KEY, invoker.getUrl().getParameter(APPLICATION_KEY));
+        // 如果该会话域是rpc会话域
         if (invocation instanceof RpcInvocation) {
+            // 设置实体域
             ((RpcInvocation) invocation).setInvoker(invoker);
         }
         try {
             RpcContext.removeServerContext();
-
+            // 调用下个调用链
             return invoker.invoke(invocation);
         } finally {
             RpcContext.removeContext();
@@ -68,6 +78,7 @@ public class ConsumerContextFilter extends ListenableFilter {
     static class ConsumerContextListener implements Listener {
         @Override
         public void onResponse(Result appResponse, Invoker<?> invoker, Invocation invocation) {
+            // 设置附加值
             RpcContext.getServerContext().setAttachments(appResponse.getAttachments());
         }
 

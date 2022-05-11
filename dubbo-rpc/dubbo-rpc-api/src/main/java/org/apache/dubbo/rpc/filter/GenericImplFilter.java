@@ -51,7 +51,9 @@ import static org.apache.dubbo.rpc.Constants.GENERIC_KEY;
 public class GenericImplFilter extends ListenableFilter {
 
     private static final Logger logger = LoggerFactory.getLogger(GenericImplFilter.class);
-
+    /**
+     * 参数集合
+     */
     private static final Class<?>[] GENERIC_PARAMETER_TYPES = new Class<?>[]{String.class, String[].class, Object[].class};
 
     public GenericImplFilter() {
@@ -60,21 +62,27 @@ public class GenericImplFilter extends ListenableFilter {
 
     @Override
     public Result invoke(Invoker<?> invoker, Invocation invocation) throws RpcException {
+        // 获得泛化的值
         String generic = invoker.getUrl().getParameter(GENERIC_KEY);
+        // 如果该值是nativejava或者bean并且不是一个泛化调用
         if (ProtocolUtils.isGeneric(generic)
                 && (!$INVOKE.equals(invocation.getMethodName()) && !$INVOKE_ASYNC.equals(invocation.getMethodName()))
                 && invocation instanceof RpcInvocation) {
             RpcInvocation invocation2 = new RpcInvocation(invocation);
+            // 获得方法名称
             String methodName = invocation2.getMethodName();
+            // 获得参数类型集合
             Class<?>[] parameterTypes = invocation2.getParameterTypes();
+            // 获得参数集合
             Object[] arguments = invocation2.getArguments();
-
+            // 把参数类型的名称放入集合
             String[] types = new String[parameterTypes.length];
             for (int i = 0; i < parameterTypes.length; i++) {
                 types[i] = ReflectUtils.getName(parameterTypes[i]);
             }
 
             Object[] args;
+            // 对参数集合进行序列化
             if (ProtocolUtils.isBeanGenericSerialization(generic)) {
                 args = new Object[arguments.length];
                 for (int i = 0; i < arguments.length; i++) {
@@ -89,9 +97,12 @@ public class GenericImplFilter extends ListenableFilter {
             } else {
                 invocation2.setMethodName($INVOKE);
             }
+            // 重新把序列化的参数放入
             invocation2.setParameterTypes(GENERIC_PARAMETER_TYPES);
             invocation2.setArguments(new Object[]{methodName, types, args});
             return invoker.invoke(invocation2);
+
+            //泛化调用
         } else if ((invocation.getMethodName().equals($INVOKE) || invocation.getMethodName().equals($INVOKE_ASYNC))
                 && invocation.getArguments() != null
                 && invocation.getArguments().length == 3
@@ -101,6 +112,7 @@ public class GenericImplFilter extends ListenableFilter {
             if (ProtocolUtils.isJavaGenericSerialization(generic)) {
 
                 for (Object arg : args) {
+                    // 如果调用消息不是字节数组类型，则抛出异常
                     if (!(byte[].class == arg.getClass())) {
                         error(generic, byte[].class.getName(), arg.getClass().getName());
                     }
@@ -112,10 +124,11 @@ public class GenericImplFilter extends ListenableFilter {
                     }
                 }
             }
-
+            // 设置附加值
             invocation.setAttachment(
                     GENERIC_KEY, invoker.getUrl().getParameter(GENERIC_KEY));
         }
+        //调用下一个调用链
         return invoker.invoke(invocation);
     }
 
@@ -140,20 +153,24 @@ public class GenericImplFilter extends ListenableFilter {
                             if (value == null) {
                                 appResponse.setValue(value);
                             } else if (value instanceof JavaBeanDescriptor) {
+                                // 用javabean方式反序列化
                                 appResponse.setValue(JavaBeanSerializeUtil.deserialize((JavaBeanDescriptor) value));
                             } else {
                                 throw new RpcException("The type of result value is " + value.getClass().getName() + " other than " + JavaBeanDescriptor.class.getName() + ", and the result is " + value);
                             }
                         } else {
+                            // 直接转化为pojo类型
                             Type[] types = ReflectUtils.getReturnTypes(method);
                             appResponse.setValue(PojoUtils.realize(value, (Class<?>) types[0], types[1]));
                         }
                     } catch (NoSuchMethodException e) {
                         throw new RpcException(e.getMessage(), e);
                     }
+                    // 如果调用链中有异常抛出，并且是GenericException类型的异常
                 } else if (appResponse.getException() instanceof GenericException) {
                     GenericException exception = (GenericException) appResponse.getException();
                     try {
+                        // 获得异常类名
                         String className = exception.getExceptionClass();
                         Class<?> clazz = ReflectUtils.forName(className);
                         Throwable targetException = null;

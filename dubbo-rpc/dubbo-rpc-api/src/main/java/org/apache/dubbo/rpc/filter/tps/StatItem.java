@@ -23,15 +23,27 @@ import java.util.concurrent.atomic.LongAdder;
  * As a state it contain name of key ( e.g. method), last invocation time, interval and rate count.
  */
 class StatItem {
-
+    /**
+     * 服务名
+     */
     private String name;
 
+    /**
+     * 最后一次重置的时间
+     */
     private long lastResetTime;
-
+    /**
+     * 周期
+     */
     private long interval;
 
+    /**
+     * 剩余多少流量
+     */
     private LongAdder token;
-
+    /**
+     * 限制大小
+     */
     private int rate;
 
     StatItem(String name, int rate, long interval) {
@@ -44,14 +56,17 @@ class StatItem {
 
     public boolean isAllowable() {
         long now = System.currentTimeMillis();
+        // 如果限制的时间大于最后一次时间加上周期，则重置
         if (now > lastResetTime + interval) {
             token = buildLongAdder(rate);
             lastResetTime = now;
         }
 
+        //没有token了
         if (token.sum() < 0) {
             return false;
         }
+        //token --
         token.decrement();
         return true;
     }

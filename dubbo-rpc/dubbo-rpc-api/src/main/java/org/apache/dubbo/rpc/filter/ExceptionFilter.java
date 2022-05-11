@@ -52,6 +52,7 @@ public class ExceptionFilter extends ListenableFilter {
 
     @Override
     public Result invoke(Invoker<?> invoker, Invocation invocation) throws RpcException {
+        // 调用下一个调用链，返回结果
         return invoker.invoke(invocation);
     }
 
@@ -63,16 +64,20 @@ public class ExceptionFilter extends ListenableFilter {
         /**
          * 如果调用某个方法 服务端出现了异常 如果是RuntimeException 服务端会将异常信息以字符串的方式返回
          * 客户端接受到请求后 判断服务端抛出了异常 将返回的字符串异常信息转化为Exception对象
-         *  前提是客户端得有这个异常类(class)  不认字符串转成哪种异常类型呢
+         *  前提是客户端得有这个异常类(class)  不然字符串转成哪种异常类型呢
+         *
+         *  可以看到除了接口上声明的Unchecked的异常和有定义的异常外，都会包装成RuntimeException来返回，为了防止客户端反序列化失败
          */
         @Override
         public void onResponse(Result appResponse, Invoker<?> invoker, Invocation invocation) {
+            // 如果结果有异常，并且该服务不是一个泛化调用
             if (appResponse.hasException() && GenericService.class != invoker.getInterface()) {
                 try {
+                    // 获得异常
                     Throwable exception = appResponse.getException();
 
                     // directly throw if it's checked exception
-                    // 如果是checked异常，直接抛出
+                    // 如果这是一个checked的异常，则直接返回异常，也就是接口上声明的Unchecked的异常
                     if (!(exception instanceof RuntimeException) && (exception instanceof Exception)) {
                         return;
                     }

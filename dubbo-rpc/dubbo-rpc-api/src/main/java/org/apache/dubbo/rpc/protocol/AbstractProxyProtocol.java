@@ -38,9 +38,13 @@ import static org.apache.dubbo.common.constants.CommonConstants.ANYHOST_VALUE;
  * AbstractProxyProtocol
  */
 public abstract class AbstractProxyProtocol extends AbstractProtocol {
-
+    /**
+     * rpc的异常类集合
+     */
     private final List<Class<?>> rpcExceptions = new CopyOnWriteArrayList<Class<?>>();
-
+    /**
+     * 代理工厂
+     */
     private ProxyFactory proxyFactory;
 
     public AbstractProxyProtocol() {
@@ -67,8 +71,9 @@ public abstract class AbstractProxyProtocol extends AbstractProtocol {
     @Override
     @SuppressWarnings("unchecked")
     public <T> Exporter<T> export(final Invoker<T> invoker) throws RpcException {
+        // 获得uri
         final String uri = serviceKey(invoker.getUrl());
-        // 从已经导出的服务中找
+        // 从已经导出的服务中找 获得服务暴露者
         Exporter<T> exporter = (Exporter<T>) exporterMap.get(uri);
         if (exporter != null) {
             // 修改了配置之后
@@ -89,6 +94,7 @@ public abstract class AbstractProxyProtocol extends AbstractProtocol {
                 exporterMap.remove(uri);
                 if (runnable != null) {
                     try {
+                        // 启动线程
                         runnable.run();
                     } catch (Throwable t) {
                         logger.warn(t.getMessage(), t);
@@ -100,9 +106,10 @@ public abstract class AbstractProxyProtocol extends AbstractProtocol {
         return exporter;
     }
 
+    //该方法是服务引用，先从代理工厂中获得Invoker对象target，然后创建了真实的invoker在重写方法中调用代理的方法，最后加入到集合。
     @Override
     protected <T> Invoker<T> protocolBindingRefer(final Class<T> type, final URL url) throws RpcException {
-        // 先调用doRefer方法，得到一个jsonrpc的客户端，生成一个代理Invoker
+        // 通过代理获得实体域 先调用doRefer方法，得到一个jsonrpc的客户端，生成一个代理Invoker
         final Invoker<T> target = proxyFactory.getInvoker(doRefer(type, url), type, url);
 
         // 然后在生成一个invoker
@@ -110,10 +117,11 @@ public abstract class AbstractProxyProtocol extends AbstractProtocol {
             @Override
             protected Result doInvoke(Invocation invocation) throws Throwable {
                 try {
-                    //
+                    // 获得调用结果
                     Result result = target.invoke(invocation);
                     // FIXME result is an AsyncRpcResult instance.
                     Throwable e = result.getException();
+                    // 如果抛出异常，则抛出相应异常
                     if (e != null) {
                         // 如果调用结果的异常属于rpc异常，则抛出一个RpcException
                         for (Class<?> rpcException : rpcExceptions) {
@@ -124,6 +132,7 @@ public abstract class AbstractProxyProtocol extends AbstractProtocol {
                     }
                     return result;
                 } catch (RpcException e) {
+                    // 抛出未知异常
                     if (e.getCode() == RpcException.UNKNOWN_EXCEPTION) {
                         e.setCode(getErrorCode(e.getCause()));
                     }

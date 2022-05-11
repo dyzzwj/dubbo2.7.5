@@ -148,11 +148,12 @@ public class RpcStatus {
         if (methodStatus.active.get() == Integer.MAX_VALUE) {
             return false;
         }
-
+        //自增后大于最大值 减回去
         if (methodStatus.active.incrementAndGet() > max) {
             methodStatus.active.decrementAndGet();
             return false;
         } else {
+            //自增后小于最大值 应用的active自增
             appStatus.active.incrementAndGet();
             return true;
         }

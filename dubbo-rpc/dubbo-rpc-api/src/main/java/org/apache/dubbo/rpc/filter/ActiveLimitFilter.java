@@ -54,23 +54,35 @@ public class ActiveLimitFilter extends ListenableFilter {
 
     @Override
     public Result invoke(Invoker<?> invoker, Invocation invocation) throws RpcException {
+        // 获得url对象
         URL url = invoker.getUrl();
+        // 获得方法名称
         String methodName = invocation.getMethodName();
+        // 获得并发调用数（单个服务的单个方法），默认为0
         int max = invoker.getUrl().getMethodParameter(methodName, ACTIVES_KEY, 0);
+        // 通过方法名来获得对应的状态
         final RpcStatus rpcStatus = RpcStatus.getStatus(invoker.getUrl(), invocation.getMethodName());
+        //如果活跃数量大于等于最大的并发调用数量
         if (!RpcStatus.beginCount(url, methodName, max)) {
+            // 获得该方法调用的超时次数
             long timeout = invoker.getUrl().getMethodParameter(invocation.getMethodName(), TIMEOUT_KEY, 0);
+            // 获得系统时间
             long start = System.currentTimeMillis();
             long remain = timeout;
             synchronized (rpcStatus) {
+                //如果活跃数量大于等于最大的并发调用数量
                 while (!RpcStatus.beginCount(url, methodName, max)) {
                     try {
+                        //等待
                         rpcStatus.wait(remain);
                     } catch (InterruptedException e) {
                         // ignore
                     }
+                    // 获得累计时间
                     long elapsed = System.currentTimeMillis() - start;
+                    //剩下的超时时间
                     remain = timeout - elapsed;
+                    // 过了超时时间 时长，则抛出异常
                     if (remain <= 0) {
                         throw new RpcException(RpcException.LIMIT_EXCEEDED_EXCEPTION,
                                 "Waiting concurrent invoke timeout in client-side for service:  " +
@@ -84,17 +96,20 @@ public class ActiveLimitFilter extends ListenableFilter {
 
         invocation.setAttachment(ACTIVELIMIT_FILTER_START_TIME, String.valueOf(System.currentTimeMillis()));
 
+        //调用后面的调用链
         return invoker.invoke(invocation);
     }
 
     static class ActiveLimitListener implements Listener {
         @Override
         public void onResponse(Result appResponse, Invoker<?> invoker, Invocation invocation) {
+            //回获得方法名
             String methodName = invocation.getMethodName();
             URL url = invoker.getUrl();
             int max = invoker.getUrl().getMethodParameter(methodName, ACTIVES_KEY, 0);
-
+            // 结束计数，记录时间
             RpcStatus.endCount(url, methodName, getElapsed(invocation), true);
+            // 唤醒rpcStatus
             notifyFinish(RpcStatus.getStatus(url, methodName), max);
         }
 
