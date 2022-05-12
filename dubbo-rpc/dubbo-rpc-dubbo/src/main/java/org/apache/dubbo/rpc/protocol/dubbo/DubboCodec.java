@@ -48,16 +48,45 @@ import static org.apache.dubbo.rpc.protocol.dubbo.Constants.DEFAULT_DECODE_IN_IO
  * Dubbo codec.
  */
 public class DubboCodec extends ExchangeCodec {
-
+    /**
+     * dubbo名称
+     */
     public static final String NAME = "dubbo";
+    /**
+     * 协议版本号
+     */
     public static final String DUBBO_VERSION = Version.getProtocolVersion();
+    /**
+     * 响应携带着异常
+     */
     public static final byte RESPONSE_WITH_EXCEPTION = 0;
+    /**
+     * 响应
+     */
     public static final byte RESPONSE_VALUE = 1;
+    /**
+     * 响应结果为空
+     */
     public static final byte RESPONSE_NULL_VALUE = 2;
+    /**
+     * 响应结果有异常并且带有附加值
+     */
     public static final byte RESPONSE_WITH_EXCEPTION_WITH_ATTACHMENTS = 3;
+    /**
+     * 响应结果有附加值
+     */
     public static final byte RESPONSE_VALUE_WITH_ATTACHMENTS = 4;
+    /**
+     * 响应结果为空并带有附加值
+     */
     public static final byte RESPONSE_NULL_VALUE_WITH_ATTACHMENTS = 5;
+    /**
+     * 对象空集合
+     */
     public static final Object[] EMPTY_OBJECT_ARRAY = new Object[0];
+    /**
+     * 空的类集合
+     */
     public static final Class<?>[] EMPTY_CLASS_ARRAY = new Class<?>[0];
     private static final Logger log = LoggerFactory.getLogger(DubboCodec.class);
 

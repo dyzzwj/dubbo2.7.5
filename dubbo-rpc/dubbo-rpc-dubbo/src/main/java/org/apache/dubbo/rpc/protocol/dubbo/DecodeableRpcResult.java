@@ -41,17 +41,29 @@ import java.util.Map;
 public class DecodeableRpcResult extends AppResponse implements Codec, Decodeable {
 
     private static final Logger log = LoggerFactory.getLogger(DecodeableRpcResult.class);
-
+    /**
+     * 通道
+     */
     private Channel channel;
-
+    /**
+     * 序列化类型
+     */
     private byte serializationType;
-
+    /**
+     * 输入流
+     */
     private InputStream inputStream;
-
+    /**
+     * 响应
+     */
     private Response response;
-
+    /**
+     * 会话域
+     */
     private Invocation invocation;
-
+    /**
+     * 是否解码
+     */
     private volatile boolean hasDecoded;
 
     public DecodeableRpcResult(Channel channel, Response response, InputStream is, Invocation invocation, byte id) {
@@ -72,27 +84,35 @@ public class DecodeableRpcResult extends AppResponse implements Codec, Decodeabl
 
     @Override
     public Object decode(Channel channel, InputStream input) throws IOException {
+        // 反序列化
         ObjectInput in = CodecSupport.getSerialization(channel.getUrl(), serializationType)
                 .deserialize(channel.getUrl(), input);
 
         byte flag = in.readByte();
+        // 根据返回的不同结果来进行处理
         switch (flag) {
             case DubboCodec.RESPONSE_NULL_VALUE:
+                // 返回结果为空
                 break;
             case DubboCodec.RESPONSE_VALUE:
+                //处理返回值
                 handleValue(in);
                 break;
             case DubboCodec.RESPONSE_WITH_EXCEPTION:
+                // 返回结果有异常
                 handleException(in);
                 break;
             case DubboCodec.RESPONSE_NULL_VALUE_WITH_ATTACHMENTS:
+                // 返回值为空，但是有附加值
                 handleAttachment(in);
                 break;
             case DubboCodec.RESPONSE_VALUE_WITH_ATTACHMENTS:
+                // 返回值
                 handleValue(in);
                 handleAttachment(in);
                 break;
             case DubboCodec.RESPONSE_WITH_EXCEPTION_WITH_ATTACHMENTS:
+                // 返回结果有异常并且有附加值
                 handleException(in);
                 handleAttachment(in);
                 break;
@@ -107,8 +127,10 @@ public class DecodeableRpcResult extends AppResponse implements Codec, Decodeabl
 
     @Override
     public void decode() throws Exception {
+        // 如果没有解码
         if (!hasDecoded && channel != null && inputStream != null) {
             try {
+                // 进行解码
                 decode(channel, inputStream);
             } catch (Throwable e) {
                 if (log.isWarnEnabled()) {
@@ -124,8 +146,10 @@ public class DecodeableRpcResult extends AppResponse implements Codec, Decodeabl
 
     private void handleValue(ObjectInput in) throws IOException {
         try {
+            // 获得返回类型数组
             Type[] returnTypes = RpcUtils.getReturnTypes(invocation);
             Object value = null;
+            // 根据返回类型读取返回结果并且放入RpcResult
             if (ArrayUtils.isEmpty(returnTypes)) {
                 value = in.readObject();
             } else if (returnTypes.length == 1) {
@@ -133,6 +157,7 @@ public class DecodeableRpcResult extends AppResponse implements Codec, Decodeabl
             } else {
                 value = in.readObject((Class<?>) returnTypes[0], returnTypes[1]);
             }
+
             setValue(value);
         } catch (ClassNotFoundException e) {
             rethrow(e);
@@ -141,6 +166,7 @@ public class DecodeableRpcResult extends AppResponse implements Codec, Decodeabl
 
     private void handleException(ObjectInput in) throws IOException {
         try {
+            // 把异常放入RpcResult
             Object obj = in.readObject();
             if (!(obj instanceof Throwable)) {
                 throw new IOException("Response data error, expect Throwable, but get " + obj);
@@ -153,6 +179,7 @@ public class DecodeableRpcResult extends AppResponse implements Codec, Decodeabl
 
     private void handleAttachment(ObjectInput in) throws IOException {
         try {
+            // 把附加值加入到RpcResult
             setAttachments((Map<String, String>) in.readObject(Map.class));
         } catch (ClassNotFoundException e) {
             rethrow(e);

@@ -38,10 +38,17 @@ import static org.apache.dubbo.rpc.protocol.dubbo.Constants.LAZY_CONNECT_INITIAL
  */
 @SuppressWarnings("deprecation")
 final class ReferenceCountExchangeClient implements ExchangeClient {
-
+    /**
+     * url对象
+     */
     private final URL url;
+    /**
+     * 计数
+     */
     private final AtomicInteger referenceCount = new AtomicInteger(0);
-
+    /**
+     * 延迟连接客户端集合
+     */
     private ExchangeClient client;
 
     public ReferenceCountExchangeClient(ExchangeClient client) {
@@ -170,6 +177,7 @@ final class ReferenceCountExchangeClient implements ExchangeClient {
      */
     private void replaceWithLazyClient() {
         // this is a defensive operation to avoid client is closed by accident, the initial state of the client is false
+        // 设置延迟连接初始化状态、是否重连、是否已经重连等配置
         URL lazyUrl = URLBuilder.from(url)
                 .addParameter(LAZY_CONNECT_INITIAL_STATE_KEY, Boolean.FALSE)
                 .addParameter(RECONNECT_KEY, Boolean.FALSE)

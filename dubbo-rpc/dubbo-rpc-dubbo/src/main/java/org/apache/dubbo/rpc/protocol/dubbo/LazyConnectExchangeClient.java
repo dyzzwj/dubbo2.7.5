@@ -44,48 +44,78 @@ import static org.apache.dubbo.rpc.protocol.dubbo.Constants.DEFAULT_LAZY_CONNECT
 final class LazyConnectExchangeClient implements ExchangeClient {
 
     /**
-     * when this warning rises from invocation, program probably have bug.
+     * 延迟连接请求错误key
      */
     protected static final String REQUEST_WITH_WARNING_KEY = "lazyclient_request_with_warning";
     private final static Logger logger = LoggerFactory.getLogger(LazyConnectExchangeClient.class);
+    /**
+     * 是否在延迟连接请求时错误
+     */
     protected final boolean requestWithWarning;
+    /**
+     * url对象
+     */
     private final URL url;
+    /**
+     * 请求处理器
+     */
     private final ExchangeHandler requestHandler;
     private final Lock connectLock = new ReentrantLock();
     private final int warning_period = 5000;
     /**
-     * lazy connect, initial state for connection
+     * 初始化状态
      */
     private final boolean initialState;
+    /**
+     * 客户端对象
+     */
     private volatile ExchangeClient client;
+    /**
+     * 错误次数
+     */
     private AtomicLong warningcount = new AtomicLong(0);
 
     public LazyConnectExchangeClient(URL url, ExchangeHandler requestHandler) {
         // lazy connect, need set send.reconnect = true, to avoid channel bad status.
+        // 默认有重连
         this.url = url.addParameter(SEND_RECONNECT_KEY, Boolean.TRUE.toString());
         this.requestHandler = requestHandler;
+        // 默认延迟连接初始化成功
         this.initialState = url.getParameter(LAZY_CONNECT_INITIAL_STATE_KEY, DEFAULT_LAZY_CONNECT_INITIAL_STATE);
+        // 默认没有错误
         this.requestWithWarning = url.getParameter(REQUEST_WITH_WARNING_KEY, false);
     }
 
     private void initClient() throws RemotingException {
+        // 如果客户端已经初始化，则直接返回
         if (client != null) {
             return;
         }
         if (logger.isInfoEnabled()) {
             logger.info("Lazy connect to " + url);
         }
+        // 获得连接锁
         connectLock.lock();
         try {
+            // 二次判空
             if (client != null) {
                 return;
             }
+            // 新建一个客户端
             this.client = Exchangers.connect(url, requestHandler);
         } finally {
+            // 释放锁
             connectLock.unlock();
         }
     }
 
+    /**
+     * 该方法在调用client.request前调用了前面两个方法，initClient我在上面讲到了，就是用来初始化客户端的。而warning是用来报错的。
+     *
+     * @param request
+     * @return
+     * @throws RemotingException
+     */
     @Override
     public CompletableFuture<Object> request(Object request) throws RemotingException {
         warning();
@@ -118,6 +148,7 @@ final class LazyConnectExchangeClient implements ExchangeClient {
      * If {@link #REQUEST_WITH_WARNING_KEY} is configured, then warn once every 5000 invocations.
      */
     private void warning() {
+        // 每5000次报错一次
         if (requestWithWarning) {
             if (warningcount.get() % warning_period == 0) {
                 logger.warn(new IllegalStateException("safe guard client , should not be called ,must have a bug."));

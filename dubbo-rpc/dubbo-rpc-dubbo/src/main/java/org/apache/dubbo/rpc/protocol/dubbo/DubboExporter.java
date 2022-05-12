@@ -26,9 +26,13 @@ import java.util.Map;
  * DubboExporter
  */
 public class DubboExporter<T> extends AbstractExporter<T> {
-
+    /**
+     * 服务key
+     */
     private final String key;
-
+    /**
+     * 服务暴露者集合
+     */
     private final Map<String, Exporter<?>> exporterMap;
 
     public DubboExporter(Invoker<T> invoker, String key, Map<String, Exporter<?>> exporterMap) {
