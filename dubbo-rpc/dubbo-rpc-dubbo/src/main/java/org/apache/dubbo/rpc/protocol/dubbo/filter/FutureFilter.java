@@ -48,6 +48,7 @@ public class FutureFilter extends ListenableFilter {
 
     @Override
     public Result invoke(final Invoker<?> invoker, final Invocation invocation) throws RpcException {
+
         fireInvokeCallback(invoker, invocation);
         // need to configure if there's return value before the invocation in order to help invoker to judge if it's
         // necessary to return future.
@@ -62,8 +63,9 @@ public class FutureFilter extends ListenableFilter {
             return;
         }
 
-
+        // 获得调用的方法
         final Method onInvokeMethod = asyncMethodInfo.getOninvokeMethod();
+        // 获得调用的服务
         final Object onInvokeInst = asyncMethodInfo.getOninvokeInstance();
 
         if (onInvokeMethod == null && onInvokeInst == null) {
@@ -72,12 +74,14 @@ public class FutureFilter extends ListenableFilter {
         if (onInvokeMethod == null || onInvokeInst == null) {
             throw new IllegalStateException("service:" + invoker.getUrl().getServiceKey() + " has a oninvoke callback config , but no such " + (onInvokeMethod == null ? "method" : "instance") + " found. url:" + invoker.getUrl());
         }
+        // 如果不可以访问，则设置为可访问
         if (!onInvokeMethod.isAccessible()) {
             onInvokeMethod.setAccessible(true);
         }
-
+        // 获得参数数组
         Object[] params = invocation.getArguments();
         try {
+            // 调用方法
             onInvokeMethod.invoke(onInvokeInst, params);
         } catch (InvocationTargetException e) {
             fireThrowCallback(invoker, invocation, e.getTargetException());
@@ -109,7 +113,9 @@ public class FutureFilter extends ListenableFilter {
 
         Object[] args = invocation.getArguments();
         Object[] params;
+        // 获得返回结果类型
         Class<?>[] rParaTypes = onReturnMethod.getParameterTypes();
+        // 设置参数和返回结果
         if (rParaTypes.length > 1) {
             if (rParaTypes.length == 2 && rParaTypes[1].isAssignableFrom(Object[].class)) {
                 params = new Object[2];
@@ -124,6 +130,7 @@ public class FutureFilter extends ListenableFilter {
             params = new Object[]{result};
         }
         try {
+            // 调用方法
             onReturnMethod.invoke(onReturnInst, params);
         } catch (InvocationTargetException e) {
             fireThrowCallback(invoker, invocation, e.getTargetException());
@@ -151,12 +158,13 @@ public class FutureFilter extends ListenableFilter {
         if (!onthrowMethod.isAccessible()) {
             onthrowMethod.setAccessible(true);
         }
+        // 获得抛出异常的类型
         Class<?>[] rParaTypes = onthrowMethod.getParameterTypes();
         if (rParaTypes[0].isAssignableFrom(exception.getClass())) {
             try {
                 Object[] args = invocation.getArguments();
                 Object[] params;
-
+                // 把类型和抛出的异常值放入返回结果
                 if (rParaTypes.length > 1) {
                     if (rParaTypes.length == 2 && rParaTypes[1].isAssignableFrom(Object[].class)) {
                         params = new Object[2];
@@ -170,6 +178,7 @@ public class FutureFilter extends ListenableFilter {
                 } else {
                     params = new Object[]{exception};
                 }
+                // 调用下一个调用连
                 onthrowMethod.invoke(onthrowInst, params);
             } catch (Throwable e) {
                 logger.error(invocation.getMethodName() + ".call back method invoke error . callback method :" + onthrowMethod + ", url:" + invoker.getUrl(), e);
@@ -207,8 +216,10 @@ public class FutureFilter extends ListenableFilter {
         @Override
         public void onResponse(Result result, Invoker<?> invoker, Invocation invocation) {
             if (result.hasException()) {
+                // 如果有异常，则调用异常处理方法
                 fireThrowCallback(invoker, invocation, result.getException());
             } else {
+                // 如果正常的返回结果，则调用正常的处理方法
                 fireReturnCallback(invoker, invocation, result.getValue());
             }
         }

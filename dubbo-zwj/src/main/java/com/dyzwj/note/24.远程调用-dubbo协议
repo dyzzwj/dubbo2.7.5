@@ -39,6 +39,20 @@ Dubbo 缺省协议采用单一长连接和 NIO 异步通讯，适合于小数据
 十一、DubboCodec
 该类是dubbo的编解码器，分别针对dubbo协议的request和response进行编码和解码。
 
+十二、DubboCountCodec
+该类是对DubboCodec的功能增强，增加了消息长度的限制。
+
+十三、TraceFilter
+该过滤器是增强的功能是通道的跟踪，会在通道内把最大的调用次数和现在的调用数量放进去。方便使用telnet来跟踪服务的调用次数等
+
+十四、FutureFilter
+该类是处理异步和同步调用结果的过滤器。
+
+十五、ServerStatusChecker
+该类是对于服务状态的监控设置。
+
+十六、ThreadPoolStatusChecker
+该类是对于线程池的状态进行监控。
 
 
 
