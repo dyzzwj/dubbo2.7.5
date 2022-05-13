@@ -28,11 +28,20 @@ import java.net.URL;
 
 public class DubboHessianURLConnectionFactory extends HessianURLConnectionFactory {
 
+    /**
+     * 打开与HTTP服务器的新连接或循环连接
+     * @param url
+     * @return
+     * @throws IOException
+     */
     @Override
     public HessianConnection open(URL url) throws IOException {
+        // 获得一个连接
         HessianConnection connection = super.open(url);
+        // 获得上下文
         RpcContext context = RpcContext.getContext();
         for (String key : context.getAttachments().keySet()) {
+            // 在http协议头里面加入dubbo中附加值，key为 header+key  value为附加值的value
             connection.addHeader(Constants.DEFAULT_EXCHANGER + key, context.getAttachment(key));
         }
 
