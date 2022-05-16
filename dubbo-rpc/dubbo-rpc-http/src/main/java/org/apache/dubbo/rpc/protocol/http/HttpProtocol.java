@@ -45,10 +45,15 @@ public class HttpProtocol extends AbstractProxyProtocol {
     public static final String ACCESS_CONTROL_ALLOW_METHODS_HEADER = "Access-Control-Allow-Methods";
     public static final String ACCESS_CONTROL_ALLOW_HEADERS_HEADER = "Access-Control-Allow-Headers";
 
+    /**
+     * http服务器集合
+     */
     private final Map<String, HttpServer> serverMap = new ConcurrentHashMap<>();
 
     private final Map<String, JsonRpcServer> skeletonMap = new ConcurrentHashMap<>();
-
+    /**
+     * HttpBinder对象
+     */
     private HttpBinder httpBinder;
 
     public HttpProtocol() {
@@ -75,7 +80,9 @@ public class HttpProtocol extends AbstractProxyProtocol {
         @Override
         public void handle(HttpServletRequest request, HttpServletResponse response)
                 throws ServletException {
+            // 获得请求uri
             String uri = request.getRequestURI();
+            // 获得服务暴露者HttpInvokerServiceExporter对象
             JsonRpcServer skeleton = skeletonMap.get(uri);
             if (cors) {
                 response.setHeader(ACCESS_CONTROL_ALLOW_ORIGIN_HEADER, "*");
@@ -84,16 +91,19 @@ public class HttpProtocol extends AbstractProxyProtocol {
             }
             if ("OPTIONS".equalsIgnoreCase(request.getMethod())) {
                 response.setStatus(200);
-            } else if ("POST".equalsIgnoreCase(request.getMethod())) {
 
+            } else if ("POST".equalsIgnoreCase(request.getMethod())) {
+                // 远程地址放到上下文
                 RpcContext.getContext().setRemoteAddress(request.getRemoteAddr(), request.getRemotePort());
                 // 处理请求
                 try {
+                    // 调用下一个调用
                     skeleton.handle(request.getInputStream(), response.getOutputStream());
                 } catch (Throwable e) {
                     throw new ServletException(e);
                 }
             } else {
+                // 如果不是post，则返回码设置500
                 response.setStatus(500);
             }
         }
@@ -102,16 +112,21 @@ public class HttpProtocol extends AbstractProxyProtocol {
 
     @Override
     protected <T> Runnable doExport(T impl, Class<T> type, URL url) throws RpcException {
+        // 获得ip地址
         String addr = url.getIp() + ":" + url.getPort();
+        // 获得http服务器
         HttpServer server = serverMap.get(addr);
+        // 如果服务器为空，则重新创建服务器，并且加入到集合
         if (server == null) {
             server = httpBinder.bind(url, new InternalHandler(url.getParameter("cors", false)));
             serverMap.put(addr, server);
         }
+        // 获得服务path
         final String path = url.getAbsolutePath();
 
         // JsonRpcServer会去处理请求
         JsonRpcServer skeleton = new JsonRpcServer(impl, type);
+        // 加入集合
         skeletonMap.put(path, skeleton);
         return () -> skeletonMap.remove(path);
     }
@@ -137,10 +152,13 @@ public class HttpProtocol extends AbstractProxyProtocol {
         if (e != null) {
             Class<?> cls = e.getClass();
             if (SocketTimeoutException.class.equals(cls)) {
+                // 返回超时异常
                 return RpcException.TIMEOUT_EXCEPTION;
             } else if (IOException.class.isAssignableFrom(cls)) {
+                //返回网络异常
                 return RpcException.NETWORK_EXCEPTION;
             } else if (ClassNotFoundException.class.isAssignableFrom(cls)) {
+                //返回序列化异常
                 return RpcException.SERIALIZATION_EXCEPTION;
             }
         }

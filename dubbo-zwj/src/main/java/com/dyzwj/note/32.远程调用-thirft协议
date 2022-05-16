@@ -1,0 +1,63 @@
+介绍thrift协议的设计和实现，介绍dubbo-rpc-thrift的源码
+dubbo集成thrift协议，是基于Thrift来实现的，Thrift是一种轻量级，与语言无关的软件堆栈，具有用于点对点RPC的相关代码生成机制。Thrift为数据传输，数据序列化和应用程序级处理提供了清晰的抽象。代码生成系统采用简单的定义语言作为输入，并跨编程语言生成代码，使用抽象堆栈构建可互操作的RPC客户端和服务器
+
+一、MultiServiceProcessor
+  该类对输入流进行操作并写入某些输出流。它实现了TProcessor接口，关键的方法是process
+
+二、RandomAccessByteArrayOutputStream
+  该类是随机访问数组的输出流，比较简单，我就不多叙述，有兴趣的可以直接看源码，不看影响也不大
+
+三、ClassNameGenerator
+
+
+四、DubboClassNameGenerator
+  该类实现了ClassNameGenerator接口，是dubbo相关的类名生成实现。
+
+五、ThriftClassNameGenerator
+  该类实现了ClassNameGenerator接口，是Thrift相关的类名生成实现
+
+
+六、ThriftUtils
+该类中封装的方法比较简单，就一些字符串的拼接，有兴趣的可以直接查看我下面贴出来的注释连接。
+
+七、ThriftCodec
+  该类是基于Thrift实现的编解码器。  这里需要大家看一下该类的注释，关于协议的数据：
+
+  * |<-                                  message header                                  ->|<- message body ->|
+  * +----------------+----------------------+------------------+---------------------------+------------------+
+  * | magic (2 bytes)|message size (4 bytes)|head size(2 bytes)| version (1 byte) | header |   message body   |
+  * +----------------+----------------------+------------------+---------------------------+------------------+
+  * |<-
+
+八、ThriftInvoker
+  该类是thrift协议的Invoker实现
+
+九、ThriftProtocol
+  该类是thrift协议的主要实现逻辑，分别实现了服务引用和服务调用的逻辑
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

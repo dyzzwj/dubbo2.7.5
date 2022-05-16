@@ -34,12 +34,12 @@ public interface Directory<T> extends Node {
 
     /**
      * get service type.
-     *
+     * 获得服务类型
      * @return service type.
      */
     Class<T> getInterface();
 
-    /**
+    /** 获得该服务的所有Invoker集合
      * list invokers.
      *
      * @return invokers

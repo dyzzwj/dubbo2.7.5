@@ -38,6 +38,7 @@ import static org.apache.dubbo.common.constants.RegistryConstants.EMPTY_PROTOCOL
 public interface Configurator extends Comparable<Configurator> {
 
     /**
+     * 配置规则，生成url
      * Get the configurator url.
      *
      * @return configurator url.
@@ -45,6 +46,7 @@ public interface Configurator extends Comparable<Configurator> {
     URL getUrl();
 
     /**
+     *  把规则配置到URL中
      * Configure the provider url.
      *
      * @param url - old provider url.

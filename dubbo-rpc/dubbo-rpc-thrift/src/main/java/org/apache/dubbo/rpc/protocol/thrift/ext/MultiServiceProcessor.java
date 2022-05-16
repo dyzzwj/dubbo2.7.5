@@ -47,48 +47,60 @@ public class MultiServiceProcessor implements TProcessor {
 
     @Override
     public boolean process(TProtocol in, TProtocol out) throws TException {
-
+        // 获得十六进制的魔数
         short magic = in.readI16();
-
+        // 如果不是规定的魔数，则打印错误日志，返回false
         if (magic != ThriftCodec.MAGIC) {
             logger.error("Unsupported magic " + magic);
             return false;
         }
-
+        // 获得三十二进制魔数
         in.readI32();
+        // 获得十六进制魔数
         in.readI16();
+        // 获得版本
         byte version = in.readByte();
+        // 获得服务名
         String serviceName = in.readString();
+        // 获得id
         long id = in.readI64();
 
         ByteArrayOutputStream bos = new ByteArrayOutputStream(1024);
-
+        // 创建基础运输TIOStreamTransport对象
         TIOStreamTransport transport = new TIOStreamTransport(bos);
-
+        // 获得协议
         TProtocol protocol = protocolFactory.getProtocol(transport);
-
+        // 从集合中取出处理器
         TProcessor processor = processorMap.get(serviceName);
-
+        // 如果处理器为空，则打印错误，返回false
         if (processor == null) {
             logger.error("Could not find processor for service " + serviceName);
             return false;
         }
 
         // todo if exception
+        // 获得结果
         boolean result = processor.process(in, protocol);
-
+        // 协议头的传输器
         ByteArrayOutputStream header = new ByteArrayOutputStream(512);
 
         TIOStreamTransport headerTransport = new TIOStreamTransport(header);
 
         TProtocol headerProtocol = protocolFactory.getProtocol(headerTransport);
 
+        // 写入16进制的魔数
         headerProtocol.writeI16(magic);
+        // 写入32进制的Integer最大值
         headerProtocol.writeI32(Integer.MAX_VALUE);
+        // 写入Short最大值的16进制
         headerProtocol.writeI16(Short.MAX_VALUE);
+        // 写入版本号
         headerProtocol.writeByte(version);
+        // 写入服务名
         headerProtocol.writeString(serviceName);
+        // 写入id
         headerProtocol.writeI64(id);
+        // 输出
         headerProtocol.getTransport().flush();
 
         out.writeI16(magic);

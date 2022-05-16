@@ -1,0 +1,36 @@
+介绍webservice协议的设计和实现，介绍dubbo-rpc-webservice的源码。
+dubbo集成webservice协议，基于 Apache CXF 的 frontend-simple 和 transports-http 实现 ，CXF 是 Apache 开源的一个 RPC 框架，由 Xfire 和 Celtix 合并而来。关于webservice协议的优势以及介绍可以查看官方文档，我就不多赘述。
+
+一、WebServiceProtocol
+  该类继承了AbstractProxyProtocol，是webservice协议的关键逻辑实现
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

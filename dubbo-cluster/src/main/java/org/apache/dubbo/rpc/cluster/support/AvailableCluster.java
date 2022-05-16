@@ -31,6 +31,7 @@ public class AvailableCluster implements Cluster {
 
     @Override
     public <T> Invoker<T> join(Directory<T> directory) throws RpcException {
+        // 创建一个AbstractClusterInvoker
         return new AvailableClusterInvoker<>(directory);
     }
 

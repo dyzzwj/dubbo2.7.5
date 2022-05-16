@@ -54,12 +54,19 @@ import static org.apache.dubbo.rpc.Constants.IS_SERVER_KEY;
  */
 @Deprecated
 public class ThriftProtocol extends AbstractProtocol {
-
+    /**
+     * 默认端口号
+     */
     public static final int DEFAULT_PORT = 40880;
-
+    /**
+     * 扩展名
+     */
     public static final String NAME = "thrift";
 
     // ip:port -> ExchangeServer
+    ///**
+    // * 服务集合，key为ip:port
+    // */
     private final ConcurrentMap<String, ExchangeServer> serverMap =
             new ConcurrentHashMap<String, ExchangeServer>();
 
@@ -67,13 +74,16 @@ public class ThriftProtocol extends AbstractProtocol {
 
         @Override
         public CompletableFuture<Object> reply(ExchangeChannel channel, Object msg) throws RemotingException {
-
+            // 如果消息是Invocation类型的
             if (msg instanceof Invocation) {
                 Invocation inv = (Invocation) msg;
                 String path = inv.getAttachments().get(PATH_KEY);
+                // 获得服务的key
                 String serviceKey = serviceKey(channel.getLocalAddress().getPort(),
                         path, null, null);
+                // 从集合中获得暴露者
                 DubboExporter<?> exporter = (DubboExporter<?>) exporterMap.get(serviceKey);
+                // 如果暴露者为空，则抛出异常
                 if (exporter == null) {
                     throw new RemotingException(channel,
                             "Not found exported service: "
@@ -87,13 +97,13 @@ public class ThriftProtocol extends AbstractProtocol {
                                     + channel.getLocalAddress()
                                     + ", message:" + msg);
                 }
-
+                // 设置远程地址
                 RpcContext.getContext().setRemoteAddress(channel.getRemoteAddress());
 
                 Result result = exporter.getInvoker().invoke(inv);
                 return result.completionFuture().thenApply(Function.identity());
             }
-
+            // 否则抛出异常，不支持的请求消息
             throw new RemotingException(channel,
                     "Unsupported request: "
                             + (msg.getClass().getName() + ": " + msg)
@@ -105,6 +115,7 @@ public class ThriftProtocol extends AbstractProtocol {
 
         @Override
         public void received(Channel channel, Object message) throws RemotingException {
+            // 如果消息是Invocation类型，则调用reply，否则接收消息
             if (message instanceof Invocation) {
                 reply((ExchangeChannel) channel, message);
             } else {
@@ -123,17 +134,24 @@ public class ThriftProtocol extends AbstractProtocol {
     public <T> Exporter<T> export(Invoker<T> invoker) throws RpcException {
 
         // can use thrift codec only
+        // 只能使用thrift编解码器
         URL url = invoker.getUrl().addParameter(Constants.CODEC_KEY, ThriftCodec.NAME);
         // find server.
+        // 获得服务地址
         String key = url.getAddress();
         // client can expose a service for server to invoke only.
+        // 客户端可以为服务器暴露服务以仅调用
         boolean isServer = url.getParameter(IS_SERVER_KEY, true);
         if (isServer && !serverMap.containsKey(key)) {
+            // 加入到集合
             serverMap.put(key, getServer(url));
         }
         // export service.
+        // 得到服务key
         key = serviceKey(url);
+        // 创建暴露者
         DubboExporter<T> exporter = new DubboExporter<T>(invoker, key, exporterMap);
+        // 加入集合
         exporterMap.put(key, exporter);
 
         return exporter;
@@ -175,11 +193,11 @@ public class ThriftProtocol extends AbstractProtocol {
     }
 
     private ExchangeClient[] getClients(URL url) {
-
+        // 获得连接数
         int connections = url.getParameter(CONNECTIONS_KEY, 1);
-
+        // 创建客户端集合
         ExchangeClient[] clients = new ExchangeClient[connections];
-
+        // 创建客户端
         for (int i = 0; i < clients.length; i++) {
             clients[i] = initClient(url);
         }
@@ -189,10 +207,11 @@ public class ThriftProtocol extends AbstractProtocol {
     private ExchangeClient initClient(URL url) {
 
         ExchangeClient client;
-
+        // 加上编解码器
         url = url.addParameter(Constants.CODEC_KEY, ThriftCodec.NAME);
 
         try {
+            // 创建客户端
             client = Exchangers.connect(url);
         } catch (RemotingException e) {
             throw new RpcException("Fail to create remoting client for service(" + url
@@ -205,20 +224,25 @@ public class ThriftProtocol extends AbstractProtocol {
 
     private ExchangeServer getServer(URL url) {
         // enable sending readonly event when server closes by default
+        // 加入只读事件
         url = url.addParameterIfAbsent(Constants.CHANNEL_READONLYEVENT_SENT_KEY, Boolean.TRUE.toString());
+        // 获得服务的实现方式
         String str = url.getParameter(Constants.SERVER_KEY, org.apache.dubbo.rpc.Constants.DEFAULT_REMOTING_SERVER);
-
+        // 如果该实现方式不是dubbo支持的方式，则抛出异常
         if (str != null && str.length() > 0 && !ExtensionLoader.getExtensionLoader(Transporter.class).hasExtension(str)) {
             throw new RpcException("Unsupported server type: " + str + ", url: " + url);
         }
 
         ExchangeServer server;
         try {
+            // 获得服务器
             server = Exchangers.bind(url, handler);
         } catch (RemotingException e) {
             throw new RpcException("Fail to start server(url: " + url + ") " + e.getMessage(), e);
         }
+        // 获得实现方式
         str = url.getParameter(Constants.CLIENT_KEY);
+        // 如果客户端实现方式不是dubbo支持的方式，则抛出异常。
         if (str != null && str.length() > 0) {
             Set<String> supportedTypes = ExtensionLoader.getExtensionLoader(Transporter.class).getSupportedExtensions();
             if (!supportedTypes.contains(str)) {

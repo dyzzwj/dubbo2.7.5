@@ -32,24 +32,32 @@ import static org.apache.dubbo.rpc.Constants.GENERIC_KEY;
 public class HttpRemoteInvocation extends RemoteInvocation {
 
     private static final long serialVersionUID = 1L;
+    /**
+     * dubbo的附加值名称
+     */
     private static final String DUBBO_ATTACHMENTS_ATTR_NAME = "dubbo.attachments";
 
     public HttpRemoteInvocation(MethodInvocation methodInvocation) {
         super(methodInvocation);
+        // 把附加值加入到会话域的属性里面
         addAttribute(DUBBO_ATTACHMENTS_ATTR_NAME, new HashMap<String, String>(RpcContext.getContext().getAttachments()));
     }
 
     @Override
     public Object invoke(Object targetObject) throws NoSuchMethodException, IllegalAccessException,
             InvocationTargetException {
+        // 获得上下文
         RpcContext context = RpcContext.getContext();
+        //设置附加值
         context.setAttachments((Map<String, String>) getAttribute(DUBBO_ATTACHMENTS_ATTR_NAME));
-
+        // 泛化标志
         String generic = (String) getAttribute(GENERIC_KEY);
+        // 如果不为空，则设置泛化标志
         if (StringUtils.isNotEmpty(generic)) {
             context.setAttachment(GENERIC_KEY, generic);
         }
         try {
+            // 调用下一个调用链
             return super.invoke(targetObject);
         } finally {
             context.setAttachments(null);

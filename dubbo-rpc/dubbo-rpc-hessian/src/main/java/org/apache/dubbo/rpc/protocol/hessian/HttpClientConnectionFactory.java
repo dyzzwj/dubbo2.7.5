@@ -32,13 +32,17 @@ import java.net.URL;
  * HttpClientConnectionFactory
  */
 public class HttpClientConnectionFactory implements HessianConnectionFactory {
-
+    /**
+     * httpClient对象
+     */
     private HttpClient httpClient;
 
     @Override
     public void setHessianProxyFactory(HessianProxyFactory factory) {
         RequestConfig requestConfig = RequestConfig.custom()
+                // 设置连接超时时间
                 .setConnectionRequestTimeout((int) factory.getConnectTimeout())
+                // 设置读取数据时阻塞链路的超时时间
                 .setSocketTimeout((int) factory.getReadTimeout())
                 .build();
         httpClient = HttpClientBuilder.create().setDefaultRequestConfig(requestConfig).build();
@@ -46,8 +50,11 @@ public class HttpClientConnectionFactory implements HessianConnectionFactory {
 
     @Override
     public HessianConnection open(URL url) {
+        // 创建一个HttpClientConnection实例
         HttpClientConnection httpClientConnection = new HttpClientConnection(httpClient, url);
+        // 获得上下文，用来获得附加值
         RpcContext context = RpcContext.getContext();
+        // 遍历附加值，放入到协议头里面
         for (String key : context.getAttachments().keySet()) {
             httpClientConnection.addHeader(Constants.DEFAULT_EXCHANGER + key, context.getAttachment(key));
         }

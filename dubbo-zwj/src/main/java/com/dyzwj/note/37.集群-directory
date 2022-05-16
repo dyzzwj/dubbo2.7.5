@@ -1,0 +1,52 @@
+介绍dubbo中集群的目录，介绍dubbo-cluster下directory包的源码。
+我在前面的文章中也提到了Directory可以看成是多个Invoker的集合，Directory 的用途是保存 Invoker，其实现类 RegistryDirectory 是一个动态服务目录，
+可感知注册中心配置的变化，它所持有的 Inovker 列表会随着注册中心内容的变化而变化。每次变化后，RegistryDirectory 会动态增删 Inovker，
+那在之前文章中我忽略了RegistryDirectory的源码分析，在本文中来补充
+
+一、AbstractDirectory
+该类实现了Directory接口，
+
+二、StaticDirectory
+静态 Directory 实现类，将传入的 invokers 集合，封装成静态的 Directory 对象。
+
+三、RegistryDirectory
+该类继承了AbstractDirectory类，是基于注册中心的动态 Directory 实现类，会根据注册中心的推送变更 List<Invoker>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

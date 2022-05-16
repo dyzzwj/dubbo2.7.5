@@ -29,6 +29,7 @@ public class BroadcastCluster implements Cluster {
 
     @Override
     public <T> Invoker<T> join(Directory<T> directory) throws RpcException {
+        // 创建一个BroadcastClusterInvoker
         return new BroadcastClusterInvoker<T>(directory);
     }
 

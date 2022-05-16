@@ -35,19 +35,20 @@ public interface Router extends Comparable<Router> {
 
     int DEFAULT_PRIORITY = Integer.MAX_VALUE;
 
+
     /**
-     * Get the router url.
-     *
+     * get the router url.
+     * 获得路由规则的url
      * @return url
      */
     URL getUrl();
 
     /**
-     * Filter invokers with current routing rule and only return the invokers that comply with the rule.
-     *
-     * @param invokers   invoker list
+     * route.
+     * 筛选出跟规则匹配的Invoker集合
+     * @param invokers
      * @param url        refer url
-     * @param invocation invocation
+     * @param invocation
      * @return routed invokers
      * @throws RpcException
      */

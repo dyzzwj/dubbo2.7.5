@@ -26,8 +26,13 @@ import org.jboss.resteasy.spi.ResteasyProviderFactory;
  *
  */
 public class DubboResourceFactory implements ResourceFactory {
-
+    /**
+     * 资源类
+     */
     private Object resourceInstance;
+    /**
+     * 扫描的类型
+     */
     private Class scannableClass;
 //    private PropertyInjector propertyInjector;
 //    private String context = null;

@@ -1,0 +1,58 @@
+介绍rest协议的设计和实现，介绍dubbo-rpc-rest的源码。
+REST的英文名是RepresentationalState Transfer，它是一种开发风格，关于REST不清楚的朋友可以了解一下。在dubbo中利用的是红帽子RedHat公司的Resteasy来使dubbo支持REST风格的开发使用。在本文中主要讲解的是基于Resteasy来实现rest协议的实现
+一、RestServer
+该接口是rest协议的服务器接口。定义了服务器相关的方法。
+
+二、BaseRestServer
+  该类实现了RestServer接口，是rest服务的抽象类，把getDeployment和doStart方法进行抽象，让子类专注于中这两个方法的实现
+
+三、DubboHttpServer
+该类继承了BaseRestServer，实现了doStart和getDeployment方法，当配置选择servlet、jetty或者tomcat作为远程通信的实现时，实现的服务器类
+
+四、NettyServer
+该类继承了BaseRestServer，当配置了netty作为远程通信的实现时，实现的服务器
+
+五、DubboResourceFactory
+  该类实现了ResourceFactory接口，是资源工程实现类，封装了以下两个属性，实现比较简单
+
+六、RestConstraintViolation
+该类是当约束违反的实体类，封装了以下三个属性，具体使用可以看下面的介绍。
+
+七、RestServerFactory
+该类是服务器工程类，用来提供相应的实例，里面逻辑比较简单。
+
+八、RpcContextFilter
+该类是过滤器。增加了对协议头大小的限制。
+
+九、RpcExceptionMapper
+  该类是异常的处理类。
+
+十、ViolationReport
+该类是约束违反的记录类，其中就封装了一个约束违反的集合。
+
+十一、RestProtocol
+   该类继承了AbstractProxyProtocol，是rest协议实现的核心。
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

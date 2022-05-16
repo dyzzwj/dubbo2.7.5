@@ -36,20 +36,23 @@ public class RmiRemoteInvocation extends RemoteInvocation {
      * executed on consumer side
      */
     public RmiRemoteInvocation(MethodInvocation methodInvocation) {
+
         super(methodInvocation);
+        // 添加dubbo附加值的属性
         addAttribute(DUBBO_ATTACHMENTS_ATTR_NAME, new HashMap<>(RpcContext.getContext().getAttachments()));
     }
 
     /**
-     * Need to restore context on provider side (Though context will be overridden by Invocation's attachment
-     * when ContextFilter gets executed, we will restore the attachment when Invocation is constructed, check more
-     * from {@link org.apache.dubbo.rpc.proxy.InvokerInvocationHandler}
+     * 需要在提供者端恢复上下文（尽管上下文将被Invocation的附件覆盖
+     * 当ContextFilter执行时，我们将在构造Invocation时恢复附件，检查更多
      */
     @SuppressWarnings("unchecked")
     @Override
     public Object invoke(Object targetObject) throws NoSuchMethodException, IllegalAccessException,
             InvocationTargetException {
+        // 获得上下文
         RpcContext context = RpcContext.getContext();
+        // 设置附加值
         context.setAttachments((Map<String, String>) getAttribute(DUBBO_ATTACHMENTS_ATTR_NAME));
         String generic = (String) getAttribute(GENERIC_KEY);
         if (StringUtils.isNotEmpty(generic)) {
@@ -58,6 +61,7 @@ public class RmiRemoteInvocation extends RemoteInvocation {
         try {
             return super.invoke(targetObject);
         } finally {
+            //清空附加值
             context.setAttachments(null);
         }
     }

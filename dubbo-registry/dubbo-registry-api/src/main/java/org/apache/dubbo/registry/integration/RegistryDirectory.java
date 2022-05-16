@@ -92,30 +92,59 @@ import static org.apache.dubbo.rpc.cluster.Constants.ROUTER_KEY;
 public class RegistryDirectory<T> extends AbstractDirectory<T> implements NotifyListener {
 
     private static final Logger logger = LoggerFactory.getLogger(RegistryDirectory.class);
-
+    /**
+     * cluster实现类对象
+     */
     private static final Cluster CLUSTER = ExtensionLoader.getExtensionLoader(Cluster.class).getAdaptiveExtension();
-
+    /**
+     * 路由工厂
+     */
     private static final RouterFactory ROUTER_FACTORY = ExtensionLoader.getExtensionLoader(RouterFactory.class)
             .getAdaptiveExtension();
 
-
+    /**
+     * 服务key
+     */
     private final String serviceKey; // Initialization at construction time, assertion not null
+    /**
+     * 服务类型
+     */
     private final Class<T> serviceType; // Initialization at construction time, assertion not null
+    /**
+     * 消费者URL的配置项 Map
+     */
     private final Map<String, String> queryMap; // Initialization at construction time, assertion not null
+    /**
+     * 原始的目录 URL
+     */
     private final URL directoryUrl; // Initialization at construction time, assertion not null, and always assign non null value
+    /**
+     * 是否使用多分组
+     */
     private final boolean multiGroup;
     /**
      * 创建RegistryDirectory对象时 依赖注入 进来的 注入的是protocol的adaptive类
      */
     private Protocol protocol; // Initialization at the time of injection, the assertion is not null
+    /**
+     * 注册中心
+     */
     private Registry registry; // Initialization at the time of injection, the assertion is not null
+    /**
+     *  是否禁止访问
+     */
     private volatile boolean forbidden = false;
 
+
+    /**
+     * 覆盖目录的url
+     */
     private volatile URL overrideDirectoryUrl; // Initialization at construction time, assertion not null, and always assign non null value
 
     private volatile URL registeredConsumerUrl;
 
     /**
+     *  配置规则数组
      * override rules
      * Priority: override>-D>consumer>provider
      * Rule one: for a certain provider <ip:port,timeout=100>
@@ -123,7 +152,9 @@ public class RegistryDirectory<T> extends AbstractDirectory<T> implements Notify
      */
     private volatile List<Configurator> configurators; // The initial value is null and the midway may be assigned to null, please use the local variable reference
 
-    // Map<url, Invoker> cache service url to invoker mapping.
+    /**
+     * url与服务提供者 Invoker 集合的映射缓存
+     */
     private volatile Map<String, Invoker<T>> urlInvokerMap; // The initial value is null and the midway may be assigned to null, please use the local variable reference
 
     /**
@@ -131,7 +162,9 @@ public class RegistryDirectory<T> extends AbstractDirectory<T> implements Notify
      */
     private volatile List<Invoker<T>> invokers;
 
-    // Set<invokerUrls> cache invokeUrls to invokers mapping.
+    /**
+     * 服务提供者Invoker 集合缓存
+     */
     private volatile Set<URL> cachedInvokerUrls; // The initial value is null and the midway may be assigned to null, please use the local variable reference
 
     /**

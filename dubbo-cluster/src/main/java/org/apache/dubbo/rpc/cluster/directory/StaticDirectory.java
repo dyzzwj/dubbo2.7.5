@@ -66,6 +66,7 @@ public class StaticDirectory<T> extends AbstractDirectory<T> {
         if (isDestroyed()) {
             return false;
         }
+        // 遍历invokers，如果有一个可用，则可用
         for (Invoker<T> invoker : invokers) {
             if (invoker.isAvailable()) {
                 return true;
@@ -80,6 +81,7 @@ public class StaticDirectory<T> extends AbstractDirectory<T> {
             return;
         }
         super.destroy();
+        // 遍历invokers，销毁所有的invoker
         for (Invoker<T> invoker : invokers) {
             invoker.destroy();
         }

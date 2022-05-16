@@ -28,32 +28,42 @@ public abstract class BaseRestServer implements RestServer {
 
     @Override
     public void start(URL url) {
+        // 支持两种 Content-Type
         getDeployment().getMediaTypeMappings().put("json", "application/json");
         getDeployment().getMediaTypeMappings().put("xml", "text/xml");
 //        server.getDeployment().getMediaTypeMappings().put("xml", "application/xml");
+        // 添加拦截器
         getDeployment().getProviderClasses().add(RpcContextFilter.class.getName());
         // TODO users can override this mapper, but we just rely on the current priority strategy of resteasy
+        // 异常类映射
         getDeployment().getProviderClasses().add(RpcExceptionMapper.class.getName());
-
+        // 添加需要加载的类
         loadProviders(url.getParameter(EXTENSION_KEY, ""));
-
+        // 开启服务器
         doStart(url);
     }
 
     @Override
     public void deploy(Class resourceDef, Object resourceInstance, String contextPath) {
         if (StringUtils.isEmpty(contextPath)) {
+            // 添加自定义资源实现端点，部署服务器
             getDeployment().getRegistry().addResourceFactory(new DubboResourceFactory(resourceInstance, resourceDef));
         } else {
+            // 添加自定义资源实现端点。指定contextPath
             getDeployment().getRegistry().addResourceFactory(new DubboResourceFactory(resourceInstance, resourceDef), contextPath);
         }
     }
 
     @Override
     public void undeploy(Class resourceDef) {
+        // 取消服务器部署
         getDeployment().getRegistry().removeRegistrations(resourceDef);
     }
 
+    /**
+     * 该方法是把类都加入到ResteasyDeployment的providerClasses中，加入各类组件。
+     * @param value
+     */
     protected void loadProviders(String value) {
         for (String clazz : COMMA_SPLIT_PATTERN.split(value)) {
             if (!StringUtils.isEmpty(clazz)) {

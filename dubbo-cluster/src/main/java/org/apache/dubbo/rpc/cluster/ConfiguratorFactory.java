@@ -28,6 +28,7 @@ import org.apache.dubbo.common.extension.SPI;
 public interface ConfiguratorFactory {
 
     /**
+     *  获得configurator实例
      * get the configurator instance.
      *
      * @param url - configurator url.

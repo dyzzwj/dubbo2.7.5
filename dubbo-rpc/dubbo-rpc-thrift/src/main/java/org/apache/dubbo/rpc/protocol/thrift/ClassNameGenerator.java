@@ -24,8 +24,16 @@ import org.apache.dubbo.common.extension.SPI;
 @SPI(DubboClassNameGenerator.NAME)
 public interface ClassNameGenerator {
 
+    /**
+     * 生成参数的类名
+     */
     String generateArgsClassName(String serviceName, String methodName);
-
+    /**
+     * 生成结果的类名
+     * @param serviceName
+     * @param methodName
+     * @return
+     */
     String generateResultClassName(String serviceName, String methodName);
 
 }

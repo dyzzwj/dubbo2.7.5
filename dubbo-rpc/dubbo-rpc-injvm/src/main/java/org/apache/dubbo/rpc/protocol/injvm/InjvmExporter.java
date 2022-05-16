@@ -26,9 +26,13 @@ import java.util.Map;
  * InjvmExporter
  */
 class InjvmExporter<T> extends AbstractExporter<T> {
-
+    /**
+     * 服务key
+     */
     private final String key;
-
+    /**
+     * 暴露者集合
+     */
     private final Map<String, Exporter<?>> exporterMap;
 
     InjvmExporter(Invoker<T> invoker, String key, Map<String, Exporter<?>> exporterMap) {
@@ -38,9 +42,14 @@ class InjvmExporter<T> extends AbstractExporter<T> {
         exporterMap.put(key, this);
     }
 
+    /**
+     * 取消暴露
+     */
     @Override
     public void unexport() {
+        // 调用父类的取消暴露方法
         super.unexport();
+        //从集合中移除
         exporterMap.remove(key);
     }
 

@@ -5,9 +5,15 @@
 一、DubboHessianURLConnectionFactory
 该类继承了HessianURLConnectionFactory类，是dubbo，用于创建与服务器的连接的内部工厂，重写了父类中open方法
 
+二、HttpClientConnection
+该类是基于HttpClient封装来实现HessianConnection接口，其中逻辑比较简单。
 
+三、HttpClientConnectionFactory
+该类实现了HessianConnectionFactory接口，是创建HttpClientConnection的工厂类。该类的实现跟DubboHessianURLConnectionFactory类类似，
+但是DubboHessianURLConnectionFactory是标准的Hessian接口调用会采用的工厂类，而HttpClientConnectionFactory是Dubbo 的 Hessian 协议调用。当然Dubbo 的 Hessian 协议也是基于http的。
 
-
+四、HessianProtocol
+该类继承了AbstractProxyProtocol类，是hessian协议的实现类。其中实现类基于hessian协议的服务引用、服务暴露等方法
 
 
 

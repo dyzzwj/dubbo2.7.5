@@ -28,6 +28,7 @@ public class AbsentConfiguratorFactory implements ConfiguratorFactory {
 
     @Override
     public Configurator getConfigurator(URL url) {
+        // 创建一个AbsentConfigurator。
         return new AbsentConfigurator(url);
     }
 

@@ -36,6 +36,7 @@ import org.apache.dubbo.common.extension.SPI;
 public interface RouterFactory {
 
     /**
+     *  创建路由
      * Create router.
      * Since 2.7.0, most of the time, we will not use @Adaptive feature, so it's kept only for compatibility.
      *
