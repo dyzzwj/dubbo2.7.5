@@ -39,6 +39,7 @@ public class ScriptRouterFactory implements RouterFactory {
 
     @Override
     public Router getRouter(URL url) {
+        // 创建ScriptRouter
         return new ScriptRouter(url);
     }
 

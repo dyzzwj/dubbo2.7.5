@@ -1,0 +1,39 @@
+介绍dubbo中集群的路由，介绍dubbo-cluster下router包的源码
+路由规则 决定一次 dubbo 服务调用的目标服务器，分为条件路由规则和脚本路由规则，并且支持可扩展
+
+一、ConditionRouterFactory
+该类是基于条件表达式规则路由工厂类。
+
+二、ConditionRouter
+该类是基于条件表达式的路由实现类。关于给予条件表达式的路由规则，可以查看官方文档：
+
+三、ScriptRouterFactory
+  该类是基于脚本的路由规则工厂类
+
+四、ScriptRouter
+  该类是基于脚本的路由实现类
+
+五、FileRouterFactory
+  该类是装饰者，对RouterFactory进行了功能增强，增加了从文件中读取规则
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

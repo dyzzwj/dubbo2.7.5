@@ -1,0 +1,50 @@
+目标：介绍dubbo中集群的Mock，介绍dubbo-cluster下关于服务降级和本地伪装的源码。
+本文讲解两块内容，分别是本地伪装和服务降级，本地伪装通常用于服务降级，比如某验权服务，当服务提供方全部挂掉后，客户端不抛出异常，而是通过 Mock 数据返回授权失败。而服务降级则是临时屏蔽某个出错的非关键服务，并定义降级后的返回策略。
+一、MockClusterWrapper
+该类是服务降级的装饰器类，对Cluster进行了功能增强，增强了服务降级的功能。
+
+二、MockClusterInvoker
+  该类是服务降级中定义降级后的返回策略的实现
+
+三、MockInvokersSelector
+  该类是路由选择器实现类
+
+四、MockProtocol
+  该类实现了AbstractProtocol接口，是服务
+
+ 五、MockInvoker
+   本地伪装的invoker实现类。
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

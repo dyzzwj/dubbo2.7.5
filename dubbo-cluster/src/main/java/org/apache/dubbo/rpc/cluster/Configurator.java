@@ -72,6 +72,7 @@ public interface Configurator extends Comparable<Configurator> {
      * @return converted configurator list
      */
     static Optional<List<Configurator>> toConfigurators(List<URL> urls) {
+        // 如果为空，则返回空集合
         if (CollectionUtils.isEmpty(urls)) {
             return Optional.empty();
         }
@@ -80,6 +81,7 @@ public interface Configurator extends Comparable<Configurator> {
                 .getAdaptiveExtension();
 
         List<Configurator> configurators = new ArrayList<>(urls.size());
+        // 遍历url集合
         for (URL url : urls) {
             // 如果存在一个empty协议，表示没有配置了
             if (EMPTY_PROTOCOL.equals(url.getProtocol())) {
@@ -90,7 +92,9 @@ public interface Configurator extends Comparable<Configurator> {
             // 如果协议不是empty，但是没有任何参数，那么也表示没有
             Map<String, String> override = new HashMap<>(url.getParameters());
             //The anyhost parameter of override may be added automatically, it can't change the judgement of changing url
+            // 覆盖的anyhost参数可以自动添加，也不能改变更改url的判断
             override.remove(ANYHOST_KEY);
+            // 如果需要覆盖添加的值为0，则清空配置
             if (override.size() == 0) {
                 configurators.clear();
                 continue;
