@@ -36,6 +36,7 @@ import java.io.OutputStream;
 public interface Serialization {
 
     /**
+     *  获得内容类型编号
      * Get content type unique id, recommended that custom implementations use values greater than 20.
      *
      * @return content type id
@@ -43,6 +44,7 @@ public interface Serialization {
     byte getContentTypeId();
 
     /**
+     *   获得内容类型名
      * Get content type
      *
      * @return content type
@@ -50,6 +52,7 @@ public interface Serialization {
     String getContentType();
 
     /**
+     *  创建 ObjectOutput 对象，序列化输出到 OutputStream
      * Get a serialization implementation instance
      *
      * @param url URL address for the remote service
@@ -61,6 +64,7 @@ public interface Serialization {
     ObjectOutput serialize(URL url, OutputStream output) throws IOException;
 
     /**
+     *  创建 ObjectInput 对象，从 InputStream 反序列化
      * Get a deserialization implementation instance
      *
      * @param url URL address for the remote service

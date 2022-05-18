@@ -344,8 +344,11 @@ public abstract class AbstractInterfaceConfig extends AbstractMethodConfig {
     protected List<URL> loadRegistries(boolean provider) {
         // check && override if necessary
         List<URL> registryList = new ArrayList<URL>();
+        // 如果registries为空，直接返回空集合
         if (CollectionUtils.isNotEmpty(registries)) {
+            // 遍历注册中心配置集合registries
             for (RegistryConfig config : registries) {
+                // 获得地址
                 String address = config.getAddress();
                 // 如果注册中心没有配地址，则地址为0.0.0.0
                 if (StringUtils.isEmpty(address)) {
@@ -369,10 +372,11 @@ public abstract class AbstractInterfaceConfig extends AbstractMethodConfig {
                         map.put(PROTOCOL_KEY, DUBBO_PROTOCOL);
                     }
 
-                    // 构造注册中心url，地址+参数
+                    // 解析得到 URL 列表，address 可能包含多个注册中心 ip，因此解析得到的是一个列表 地址+参数
                     List<URL> urls = UrlUtils.parseURLs(address, map);
-
+                    // 遍历URL 列表
                     for (URL url : urls) {
+                        // 将 URL 协议头设置为 registry
                         url = URLBuilder.from(url)
                                 .addParameter(REGISTRY_KEY, url.getProtocol())
                                 .setProtocol(REGISTRY_PROTOCOL)

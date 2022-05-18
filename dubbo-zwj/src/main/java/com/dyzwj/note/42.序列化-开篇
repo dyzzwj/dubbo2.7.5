@@ -1,0 +1,80 @@
+介绍dubbo中序列化的内容，对dubbo中支持的序列化方式做对比，介绍dubbo-serialization-api下的源码
+
+dubbo在2.6.x版本中，支持五种序列化方式，分别是
+
+1、fastjson：依赖阿里的fastjson库，功能强大(支持普通JDK类包括任意Java Bean Class、Collection、Map、Date或enum)
+2、fst：完全兼容JDK序列化协议的系列化框架，序列化速度大概是JDK的4-10倍，大小是JDK大小的1/3左右。
+3、hessian2：hessian是一种跨语言的高效二进制序列化方式。但这里实际不是原生的hessian2序列化，而是阿里修改过的hessian lite，它是dubbo RPC默认启用的序列化方式
+4、jdk：JDK自带的Java序列化实现。
+5、kryo：是一个快速序列化/反序列化工具，其使用了字节码生成机制（底层依赖了 ASM 库），因此具有比较好的运行速度，速度快，序列化后体积小，跨语言支持较复杂
+在dubbo最新的2.7.0版本中支持了protostuff，之前的版本dubbo还实现了自己的dubbo序列化，但是由于还不够成熟，所有暂时移除了dubbo序列化的实现。
+
+从性能上对比，fst和kryo>hessian2>fastjson>jdk。
+
+他们具体的实现我不讲解，因为很多都直接使用了对应的依赖裤，我只讲解dubbo序列化的接口设计
+
+一、DataInput
+该接口是数据输入接口，可以看到定义了从 InputStream 中各类数据类型的读取方法。
+
+二、DataOutput
+该接口是数据输出接口，可以看到定义了向 InputStream 中，写入基本类型的数据。
+
+三、ObjectOutput
+在 DataOutput 的基础上，增加写入object类型的数据。
+
+四、ObjectInput
+该接口是继承了DataInput 接口，在 DataInput 的基础上，增加读取object类型的数据。
+
+五、Cleanable
+该接口是清理接口，定义了一个清理方法。目前只有kryo实现的时候，完成序列化或反序列化，需要做清理。通过实现该接口，执行清理的逻辑。
+
+六、Serialization
+该接口是序列化接口，该接口也是可扩展接口，默认是使用hessian2序列化方式。其中定义了序列化和反序列化等方法
+
+七、SerializableClassRegistry
+该类提供一个序列化统一的注册中心，其实就是封装了可序列化类的集合
+
+八、SerializationOptimizer
+该接口序列化优化器接口，在 Kryo 、FST 中，支持配置需要优化的类。业务系统中，可以实现自定义的 SerializationOptimizer，进行配置。或者使用文件来配置也是一个选择。
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

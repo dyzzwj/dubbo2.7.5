@@ -24,6 +24,7 @@ import java.io.IOException;
 public interface DataInput {
 
     /**
+     *  读取bollean类型
      * Read boolean.
      *
      * @return boolean.
@@ -32,6 +33,7 @@ public interface DataInput {
     boolean readBool() throws IOException;
 
     /**
+     *  读取字节类型
      * Read byte.
      *
      * @return byte value.
