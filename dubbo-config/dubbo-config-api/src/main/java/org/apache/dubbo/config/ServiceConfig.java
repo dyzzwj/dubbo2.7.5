@@ -669,28 +669,33 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
         URL url = new URL(name, host, port, getContextPath(protocolConfig).map(p -> p + "/" + path).orElse(path), map);
         // url：http://192.168.40.17:80/org.apache.dubbo.demo.DemoService?anyhost=true&application=dubbo-demo-annotation-provider&bean.name=ServiceBean:org.apache.dubbo.demo.DemoService&bind.ip=192.168.40.17&bind.port=80&deprecated=false&dubbo=2.0.2&dynamic=true&generic=false&interface=org.apache.dubbo.demo.DemoService&methods=sayHello&pid=285072&release=&side=provider&timestamp=1585206500409
 
+        // —————————————————————————————————————分割线———————————————————————————————————————
+
+
         // 加载 ConfiguratorFactory，并生成 Configurator 实例，判断是否有该协议的实现存在
         // 可以通过ConfiguratorFactory，对服务url再次进行配置
         if (ExtensionLoader.getExtensionLoader(ConfiguratorFactory.class)
                 .hasExtension(url.getProtocol())) {
+            // 通过实例配置 url
             url = ExtensionLoader.getExtensionLoader(ConfiguratorFactory.class)
                     .getExtension(url.getProtocol()).getConfigurator(url).configure(url);
         }
 
         String scope = url.getParameter(SCOPE_KEY); // scope可能为null，remote, local,none
         // don't export when none is configured
+        // 如果scope为none,则不会进行任何的服务导出，既不会远程，也不会本地
         if (!SCOPE_NONE.equalsIgnoreCase(scope)) {
-            // 如果scope为none,则不会进行任何的服务导出，既不会远程，也不会本地
 
             // export to local if the config is not remote (export to remote only when config is remote)
+            // scope != remote，暴露到本地
             if (!SCOPE_REMOTE.equalsIgnoreCase(scope)) {
                 // 如果scope不是remote,则会进行本地导出，会把当前url的protocol改为injvm，然后进行导出
                 exportLocal(url);
             }
             // export to remote if the config is not local (export to local only when config is local)
+            // 如果scope不是local,则会进行远程导出
             if (!SCOPE_LOCAL.equalsIgnoreCase(scope)) {
-                // 如果scope不是local,则会进行远程导出
-
+                // 如果注册中心集合不为空
                 if (CollectionUtils.isNotEmpty(registryURLs)) {
                     // 如果有注册中心，则将服务注册到注册中心
                     for (URL registryURL : registryURLs) {
@@ -709,6 +714,7 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
 
                         // 当前服务连接哪个监控中心
                         if (monitorUrl != null) {
+                            // 添加监视器配置
                             url = url.addParameterAndEncoded(MONITOR_KEY, monitorUrl.toFullString());
                         }
 
@@ -725,6 +731,7 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
                         // 服务使用的动态代理机制，如果为空则使用javassit
                         String proxy = url.getParameter(PROXY_KEY);
                         if (StringUtils.isNotEmpty(proxy)) {
+                            // 添加代理方式到注册中心到url
                             registryURL = registryURL.addParameter(PROXY_KEY, proxy);
                         }
 
@@ -747,11 +754,12 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
                         // 2. 注册完了之后，使用DubboProtocol进行导出
                         // 到此为止做了哪些事情？ ServiceBean.export()-->刷新ServiceBean的参数-->得到注册中心URL和协议URL-->遍历每个协议URL-->组成服务URL-->生成可执行服务Invoker-->导出服务
                         Exporter<?> exporter = protocol.export(wrapperInvoker);
+                        // 加入到暴露者集合中
                         exporters.add(exporter);
                     }
                 } else {
                     // 没有配置注册中心时，也会导出服务
-
+                    // 不存在注册中心，则仅仅暴露服务，不会记录暴露到地址
                     if (logger.isInfoEnabled()) {
                         logger.info("Export dubbo service " + interfaceClass.getName() + " to url " + url);
                     }
@@ -771,6 +779,7 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
                  */
                 // 根据服务url，讲服务的元信息存入元数据中心
                 MetadataReportService metadataReportService = null;
+                // 如果元数据中心服务不为空，则发布该服务，也就是在元数据中心记录url中到部分配置
                 if ((metadataReportService = getMetadataReportService()) != null) {
                     metadataReportService.publishProvider(url);
                 }
