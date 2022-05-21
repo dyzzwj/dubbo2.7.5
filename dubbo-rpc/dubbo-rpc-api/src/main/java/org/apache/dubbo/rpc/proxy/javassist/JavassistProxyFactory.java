@@ -45,7 +45,7 @@ public class JavassistProxyFactory extends AbstractProxyFactory {
 
         // proxy是服务实现类
         // type是服务接口
-        // url是一个注册中心url，但同时也记录了
+        // url是一个注册中心url
         return new AbstractProxyInvoker<T>(proxy, type, url) {
             @Override
             protected Object doInvoke(T proxy, String methodName,
@@ -55,6 +55,7 @@ public class JavassistProxyFactory extends AbstractProxyFactory {
                 // 执行proxy的method方法
                 // 执行的proxy实例的方法
                 // 如果没有wrapper，则要通过原生的反射技术去获取Method对象，然后执行
+                // 调用 Wrapper 的 invokeMethod 方法，invokeMethod 最终会调用目标方法
                 return wrapper.invokeMethod(proxy, methodName, parameterTypes, arguments);
             }
         };

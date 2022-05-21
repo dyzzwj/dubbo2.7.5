@@ -58,6 +58,7 @@ public class Transporters {
 
         // 调用Transporter的实现类对象的bind方法。
         // 调用NettyTransporter去绑定，Transporter表示网络传输层
+        //org.apache.dubbo.remoting.transport.netty4.NettyTransporter.bind
         return getTransporter().bind(url, handler);
     }
 

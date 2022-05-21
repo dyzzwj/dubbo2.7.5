@@ -119,6 +119,7 @@ public abstract class Wrapper {
         if (ret == null) {
             //创建Wrapper
             ret = makeWrapper(c);
+            //写入缓存
             WRAPPER_MAP.put(c, ret);
         }
         return ret;
@@ -150,7 +151,6 @@ public abstract class Wrapper {
         List<String> mns = new ArrayList<>(); // method names.
         List<String> dmns = new ArrayList<>(); // declaring method names.
 
-        // get all public field.
         // 遍历每个public的属性，放入setPropertyValue和getPropertyValue方法中
         for (Field f : c.getFields()) {
             //属性名

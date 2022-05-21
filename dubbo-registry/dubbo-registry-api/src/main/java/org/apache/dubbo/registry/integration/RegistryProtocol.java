@@ -193,6 +193,7 @@ public class RegistryProtocol implements Protocol {
     }
 
     public void register(URL registryUrl, URL registeredProviderUrl) {
+        // 获取 Registry
         Registry registry = registryFactory.getRegistry(registryUrl);
 
         //FailbackRegistry.register
@@ -211,15 +212,12 @@ public class RegistryProtocol implements Protocol {
         // zookeeper://  ---> ZookeeperRegistry
         // dubbo://      ---> DubboProtocol
 
-        // registry://xxx?xx=xx&registry=zookeeper ---> zookeeper://xxx?xx=xx     表示注册中心
+        // 获得注册中心的url registry://xxx?xx=xx&registry=zookeeper ---> zookeeper://xxx?xx=xx     表示注册中心
         URL registryUrl = getRegistryUrl(originInvoker); // zookeeper://127.0.0.1:2181/org.apache.dubbo.registry.RegistryService?application=dubbo-demo-provider-application&dubbo=2.0.2&export=dubbo%3A%2F%2F192.168.40.17%3A20880%2Forg.apache.dubbo.demo.DemoService%3Fanyhost%3Dtrue%26application%3Ddubbo-demo-provider-application%26bean.name%3DServiceBean%3Aorg.apache.dubbo.demo.DemoService%26bind.ip%3D192.168.40.17%26bind.port%3D20880%26deprecated%3Dfalse%26dubbo%3D2.0.2%26dynamic%3Dtrue%26generic%3Dfalse%26interface%3Dorg.apache.dubbo.demo.DemoService%26logger%3Dlog4j%26methods%3DsayHello%26pid%3D27656%26release%3D2.7.0%26side%3Dprovider%26timeout%3D3000%26timestamp%3D1590735956489&logger=log4j&pid=27656&release=2.7.0&timestamp=1590735956479
         // 得到服务提供者url，表示服务提供者
         URL providerUrl = getProviderUrl(originInvoker); // dubbo://192.168.40.17:20880/org.apache.dubbo.demo.DemoService?anyhost=true&application=dubbo-demo-provider-application&bean.name=ServiceBean:org.apache.dubbo.demo.DemoService&bind.ip=192.168.40.17&bind.port=20880&deprecated=false&dubbo=2.0.2&dynamic=true&generic=false&interface=org.apache.dubbo.demo.DemoService&logger=log4j&methods=sayHello&pid=27656&release=2.7.0&side=provider&timeout=3000&timestamp=1590735956489
 
         // Subscribe the override data
-        // FIXME When the provider subscribes, it will affect the scene : a certain JVM exposes the service and call
-        //  the same service. Because the subscribed is cached key with the name of the service, it causes the
-        //  subscription information to cover.
 
         // overrideSubscribeUrl是老版本的动态配置监听url，表示了需要监听的服务以及监听的类型（configurators， 这是老版本上的动态配置）
         // 在服务提供者url的基础上，生成一个overrideSubscribeUrl，协议为provider://，增加参数category=configurators&check=false
@@ -228,6 +226,7 @@ public class RegistryProtocol implements Protocol {
         // 一个overrideSubscribeUrl对应一个OverrideListener，用来监听变化事件，监听到overrideSubscribeUrl的变化后，
         // OverrideListener就会根据变化进行相应处理，具体处理逻辑看OverrideListener的实现
         final OverrideListener overrideSubscribeListener = new OverrideListener(overrideSubscribeUrl, originInvoker);
+        // 把监听器添加到集合
         overrideListeners.put(overrideSubscribeUrl, overrideSubscribeListener);
 
 
@@ -244,7 +243,7 @@ public class RegistryProtocol implements Protocol {
         providerUrl = overrideUrlWithConfig(providerUrl, overrideSubscribeListener);
 
         // export invoker
-        // 根据动态配置重写了providerUrl之后，就会调用DubboProtocol或HttpProtocol去进行导出服务了
+        // 服务暴露 根据动态配置重写了providerUrl之后，就会调用DubboProtocol或HttpProtocol去进行导出服务了
         final ExporterChangeableWrapper<T> exporter = doLocalExport(originInvoker, providerUrl);
 
         // url to registry
@@ -259,12 +258,16 @@ public class RegistryProtocol implements Protocol {
                 registryUrl, registeredProviderUrl);
 
 
+        // ————————————————————————————————分割线——————————————————————————————————————
+
+
         //to judge if we need to delay publish
         //是否需要注册到注册中心
         boolean register = providerUrl.getParameter(REGISTER_KEY, true);
         if (register) {
             // 注册服务，把简化后的服务提供者url注册到registryUrl中去
             register(registryUrl, registeredProviderUrl);
+            // 设置reg为true，表示服务注册过
             providerInvokerWrapper.setReg(true);
         }
 
@@ -277,8 +280,9 @@ public class RegistryProtocol implements Protocol {
         // 监听的是路径的内容，不是节点的内容
         registry.subscribe(overrideSubscribeUrl, overrideSubscribeListener);
 
-
+        // 设置注册中心url
         exporter.setRegisterUrl(registeredProviderUrl);
+        // 设置override数据订阅的url
         exporter.setSubscribeUrl(overrideSubscribeUrl);
         //Ensure that a new exporter instance is returned every time export
         return new DestroyableExporter<>(exporter);
@@ -300,7 +304,7 @@ public class RegistryProtocol implements Protocol {
 
         return (ExporterChangeableWrapper<T>) bounds.computeIfAbsent(key, s -> {
             Invoker<?> invokerDelegate = new InvokerDelegate<>(originInvoker, providerUrl);
-            // protocol属性的值是哪来的，是在SPI中注入进来的，是一个代理类
+            // protocol这个属性的值是哪来的？是在SPI中注入进来的，是一个代理类
             // 这里实际利用的就是DubboProtocol或HttpProtocol去export  NettyServer
             // 为什么需要ExporterChangeableWrapper？方便注销已经被导出的服务
             //invokerDelegate里的URL是服务提供者的url，最终会调用DubboProtocol或HttpProtocol

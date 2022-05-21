@@ -32,6 +32,7 @@ import org.apache.dubbo.config.context.ConfigManager;
 import org.apache.dubbo.config.invoker.DelegateProviderMetaDataInvoker;
 import org.apache.dubbo.config.support.Parameter;
 import org.apache.dubbo.metadata.integration.MetadataReportService;
+import org.apache.dubbo.registry.integration.RegistryProtocol;
 import org.apache.dubbo.remoting.Constants;
 import org.apache.dubbo.rpc.Exporter;
 import org.apache.dubbo.rpc.Invoker;
@@ -740,6 +741,7 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
                         // 对应的url为 registry://127.0.0.1:2181/org.apache.dubbo.registry.RegistryService?application=dubbo-demo-annotation-provider&dubbo=2.0.2&export=http%3A%2F%2F192.168.40.17%3A80%2Forg.apache.dubbo.demo.DemoService%3Fanyhost%3Dtrue%26application%3Ddubbo-demo-annotation-provider%26bean.name%3DServiceBean%3Aorg.apache.dubbo.demo.DemoService%26bind.ip%3D192.168.40.17%26bind.port%3D80%26deprecated%3Dfalse%26dubbo%3D2.0.2%26dynamic%3Dtrue%26generic%3Dfalse%26interface%3Dorg.apache.dubbo.demo.DemoService%26methods%3DsayHello%26pid%3D19472%26release%3D%26side%3Dprovider%26timestamp%3D1585207994860&pid=19472&registry=zookeeper&timestamp=1585207994828
                         // 这个Invoker中包括了服务的实现者、服务接口类、服务的注册地址（针对当前服务的，参数export指定了当前服务）
                         // 此invoker表示一个可执行的服务，调用invoker的invoke()方法即可执行服务,同时此invoker也可用来导出
+                        //JavassistProxyFactory.getInvoker
                         Invoker<?> invoker = PROXY_FACTORY.getInvoker(ref, (Class) interfaceClass, registryURL.addParameterAndEncoded(EXPORT_KEY, url.toFullString()));
 
 
@@ -753,6 +755,7 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
                         // 1. 先使用RegistryProtocol进行服务注册
                         // 2. 注册完了之后，使用DubboProtocol进行导出
                         // 到此为止做了哪些事情？ ServiceBean.export()-->刷新ServiceBean的参数-->得到注册中心URL和协议URL-->遍历每个协议URL-->组成服务URL-->生成可执行服务Invoker-->导出服务
+                        //RegistryProtocol.export
                         Exporter<?> exporter = protocol.export(wrapperInvoker);
                         // 加入到暴露者集合中
                         exporters.add(exporter);
@@ -793,13 +796,18 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
      * always export injvm
      */
     private void exportLocal(URL url) {
+        // 生成本地的url,分别把协议改为injvm，设置host和port
         URL local = URLBuilder.from(url)
                 .setProtocol(LOCAL_PROTOCOL)
                 .setHost(LOCALHOST_VALUE)
                 .setPort(0)
                 .build();
+        // 通过代理工程创建invoker
+        // 再调用export方法进行暴露服务，生成Exporter
+        //InjvmProtocol.export
         Exporter<?> exporter = protocol.export(
                 PROXY_FACTORY.getInvoker(ref, (Class) interfaceClass, local));
+        // 把生成的暴露者加入集合
         exporters.add(exporter);
         logger.info("Export dubbo service " + interfaceClass.getName() + " to local registry url : " + local);
     }
