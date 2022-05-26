@@ -511,7 +511,7 @@ public class DubboProtocol extends AbstractProtocol {
         // DUbboInvoker.invoke 3NettyClient
         // 一个连接是否对于一个服务
         boolean useShareConnect = false;
-        // 获得url中欢愉连接共享的配置 默认为0
+        // 获得url中连接共享的配置 默认为0
         // connections表示对当前服务提供者建立connections个socket连接
         // 消费者应用引用了两个服务A和B，这两个服务都部署在了应用C上，如果connections为2，那么消费者应用会与应用C建立4个Socket连接
         int connections = url.getParameter(CONNECTIONS_KEY, 0);

@@ -162,13 +162,7 @@ public abstract class AbstractInvoker<T> implements Invoker<T> {
         Map<String, String> contextAttachments = RpcContext.getContext().getAttachments();
         // 把上下文的附加值放入会话域
         if (CollectionUtils.isNotEmptyMap(contextAttachments)) {
-            /**
-             *
-             * invocation.addAttachmentsIfAbsent(context){@link RpcInvocation#addAttachmentsIfAbsent(Map)}should not be used here,
-             * because the {@link RpcContext#setAttachment(String, String)} is passed in the Filter when the call is triggered
-             * by the built-in retry mechanism of the Dubbo. The attachment to update RpcContext will no longer work, which is
-             * a mistake in most cases (for example, through Filter to RpcContext output traceId and spanId and other information).
-             */
+
             invocation.addAttachments(contextAttachments);
         }
         // 如果开启的是异步调用，则把该设置也放入附加值
@@ -180,13 +174,17 @@ public abstract class AbstractInvoker<T> implements Invoker<T> {
             // 执行调用链
             return doInvoke(invocation);
         } catch (InvocationTargetException e) { // biz exception
+            // 获得异常
             Throwable te = e.getTargetException();
             if (te == null) {
+                // 创建默认的异常异步结果
                 return AsyncRpcResult.newDefaultAsyncResult(null, e, invocation);
             } else {
                 if (te instanceof RpcException) {
+                    // 设置异常码
                     ((RpcException) te).setCode(RpcException.BIZ_EXCEPTION);
                 }
+                // 创建默认的异常异步结果
                 return AsyncRpcResult.newDefaultAsyncResult(null, te, invocation);
             }
         } catch (RpcException e) {

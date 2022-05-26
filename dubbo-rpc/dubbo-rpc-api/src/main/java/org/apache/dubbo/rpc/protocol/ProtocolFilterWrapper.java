@@ -98,13 +98,16 @@ public class ProtocolFilterWrapper implements Protocol {
                     public Result invoke(Invocation invocation) throws RpcException {
                         Result asyncResult;
                         try {
-                            // 得到一个异步结果
+                            // 依次调用各个过滤器，获得最终的返回结果
                             asyncResult = filter.invoke(next, invocation);
                         } catch (Exception e) {
                             // onError callback
+                            // 捕获异常，如果该过滤器是ListenableFilter类型的
                             if (filter instanceof ListenableFilter) {
+                                // 获得内部类Listener
                                 Filter.Listener listener = ((ListenableFilter) filter).listener();
                                 if (listener != null) {
+                                    //调用onError，回调错误信息
                                     listener.onError(e, invoker, invocation);
                                 }
                             }
@@ -198,15 +201,20 @@ public class ProtocolFilterWrapper implements Protocol {
 
             // 过滤器都执行完了之后，回调每个ListenableFilter过滤器的onResponse或onError方法
             asyncResult = asyncResult.whenCompleteWithContext((r, t) -> {
+                // 循环各个过滤器
                 for (int i = filters.size() - 1; i >= 0; i--) {
                     Filter filter = filters.get(i);
                     // onResponse callback
+                    // 如果该过滤器是ListenableFilter类型的
                     if (filter instanceof ListenableFilter) {
+                        // 强制类型转化
                         Filter.Listener listener = ((ListenableFilter) filter).listener();
                         if (listener != null) {
                             if (t == null) {
+                                // 如果内部类listener不为空，则调用回调方法onResponse
                                 listener.onResponse(r, filterInvoker, invocation);
                             } else {
+                                // 否则，直接调用filter的onResponse，做兼容。
                                 listener.onError(t, filterInvoker, invocation);
                             }
                         }

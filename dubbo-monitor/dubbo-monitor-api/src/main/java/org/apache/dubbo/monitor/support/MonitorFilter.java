@@ -85,7 +85,9 @@ public class MonitorFilter extends ListenableFilter {
      */
     @Override
     public Result invoke(Invoker<?> invoker, Invocation invocation) throws RpcException {
+        // 如果开启监控
         if (invoker.getUrl().hasParameter(MONITOR_KEY)) {
+            // 设置监控开始时间
             invocation.setAttachment(MONITOR_FILTER_START_TIME, String.valueOf(System.currentTimeMillis()));
             // 方法的执行次数+1
             getConcurrent(invoker, invocation).incrementAndGet(); // count up
@@ -108,16 +110,22 @@ public class MonitorFilter extends ListenableFilter {
 
         @Override
         public void onResponse(Result result, Invoker<?> invoker, Invocation invocation) {
+            // 如果开启监控
             if (invoker.getUrl().hasParameter(MONITOR_KEY)) {
+                // 执行监控，搜集数据
                 collect(invoker, invocation, result, RpcContext.getContext().getRemoteHost(), Long.valueOf(invocation.getAttachment(MONITOR_FILTER_START_TIME)), false);
+                // 减少当前调用数
                 getConcurrent(invoker, invocation).decrementAndGet(); // count down
             }
         }
 
         @Override
         public void onError(Throwable t, Invoker<?> invoker, Invocation invocation) {
+            // 如果开启监控
             if (invoker.getUrl().hasParameter(MONITOR_KEY)) {
+                // 执行监控，搜集数据
                 collect(invoker, invocation, null, RpcContext.getContext().getRemoteHost(), Long.valueOf(invocation.getAttachment(MONITOR_FILTER_START_TIME)), true);
+                // 减少当前调用数
                 getConcurrent(invoker, invocation).decrementAndGet(); // count down
             }
         }

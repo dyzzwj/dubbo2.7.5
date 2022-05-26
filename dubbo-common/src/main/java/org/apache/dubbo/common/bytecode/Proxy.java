@@ -63,19 +63,25 @@ public abstract class Proxy {
      * @return Proxy instance.
      */
     public static Proxy getProxy(Class<?>... ics) {
-        // 获得代理类
+        // 获得Proxy的类加载器来进行生成代理类
         return getProxy(ClassUtils.getClassLoader(Proxy.class), ics);
     }
 
 
     /**
-     * 该方法比较长，可以分开五个步骤来看：
+     * 代码比较多，大致可以分为以下几步：
      *
-     * 1、遍历代理接口，获取接口的全限定名，并以分号分隔连接成字符串，以此字符串为key，查找缓存map，如果缓存存在，则获取代理对象直接返回。
-     * 2、由一个AtomicLong自增生成代理类类名后缀id，防止冲突
-     * 3、遍历接口中的方法，获取返回类型和参数类型，构建的方法体见注释
-     * 4、创建工具类ClassGenerator实例，添加静态字段Method[] methods，添加实例对象InvokerInvocationHandler hanler，添加参数为InvokerInvocationHandler的构造器，添加无参构造器，然后使用toClass方法生成对应的字节码。
-     * 5、4中生成的字节码对象为服务接口的代理对象，而Proxy类本身是抽象类，需要实现newInstance(InvocationHandler handler)方法，生成Proxy的实现类，其中proxy0即上面生成的服务接口的代理对象。
+     * 1、对接口进行校验，检查是否是一个接口，是否不能被类加载器加载。
+     * 2、做并发控制，保证只有一个线程可以进行后续的代理生成操作。
+     * 3、创建cpp，用作为服务接口生成代理类。首先对接口定义以及包信息进行处理。
+     * 4、对接口的方法进行处理，包括返回类型，参数类型等。最后添加方法名、访问控制符、参数列表、方法代码等信息到 ClassGenerator 中。
+     * 5、创建接口代理类的信息，比如名称，默认构造方法等。
+     * 6、生成接口代理类。
+     * 7、创建ccm，ccm 则是用于为 org.apache.dubbo.common.bytecode.Proxy 抽象类生成子类，主要是实现 Proxy 类的抽象方法。
+     * 8、设置名称、创建构造方法、添加方法
+     * 9、生成 Proxy 实现类。
+     * 10、释放资源
+     * 11、创建弱引用，写入缓存，唤醒其他线程。
      * @param cl
      * @param ics
      * @return
@@ -106,15 +112,17 @@ public abstract class Proxy {
             if (tmp != ics[i]) {
                 throw new IllegalArgumentException(ics[i] + " is not visible from class loader");
             }
-            // 拼接类
+            // 拼接接口全限定名，分隔符为 ;
             sb.append(itf).append(';');
         }
 
         // use interface class name list as key.
+        // 使用拼接后的接口名作为 key
         String key = sb.toString();
 
         // get cache by class loader.
         final Map<String, Object> cache;
+        // 把该类加载器加到本地缓存
         synchronized (PROXY_CACHE_MAP) {
             // 通过类加载器获得缓存
             cache = PROXY_CACHE_MAP.computeIfAbsent(cl, k -> new HashMap<>());
@@ -123,6 +131,7 @@ public abstract class Proxy {
         Proxy proxy = null;
         synchronized (cache) {
             do {
+                // 从缓存中获取 Reference<Proxy> 实例
                 Object value = cache.get(key);
                 // 如果缓存中存在，则直接返回代理对象
                 if (value instanceof Reference<?>) {
@@ -131,14 +140,15 @@ public abstract class Proxy {
                         return proxy;
                     }
                 }
-                // 是等待生成的类型，则等待
+                // 是等待生成的类型，则等待  并发控制，保证只有一个线程可以进行后续操作
                 if (value == PENDING_GENERATION_MARKER) {
                     try {
+                        // 其他线程在此处进行等待
                         cache.wait();
                     } catch (InterruptedException e) {
                     }
                 } else {
-                    // 否则放入缓存中
+                    //放置标志位到缓存中，并跳出 while 循环进行后续操作
                     cache.put(key, PENDING_GENERATION_MARKER);
                     break;
                 }
@@ -150,13 +160,14 @@ public abstract class Proxy {
         String pkg = null;
         ClassGenerator ccp = null, ccm = null;
         try {
+            // 创建 ClassGenerator 对象
             ccp = ClassGenerator.newInstance(cl);
 
             Set<String> worked = new HashSet<>();
             List<Method> methods = new ArrayList<>();
 
             for (int i = 0; i < ics.length; i++) {
-                // 判断是否为public
+                // 判断是否为public 检测接口访问级别是否为 protected 或 privete
                 if (!Modifier.isPublic(ics[i].getModifiers())) {
 
                     // 获得该类的包名
@@ -164,6 +175,7 @@ public abstract class Proxy {
                     if (pkg == null) {
                         pkg = npkg;
                     } else {
+                        // 非 public 级别的接口必须在同一个包下，否者抛出异常
                         if (!pkg.equals(npkg)) {
                             throw new IllegalArgumentException("non-public interfaces from different packages");
                         }
@@ -177,6 +189,8 @@ public abstract class Proxy {
                     // 例如：int do(int arg1) => "do(I)I"
                     // 例如：void do(String arg1,boolean arg2) => "do(Ljava/lang/String;Z)V"
                     String desc = ReflectUtils.getDesc(method);
+                    // 如果方法描述字符串已在 worked 中，则忽略。考虑这种情况，
+                    // A 接口和 B 接口中包含一个完全相同的方法
                     if (worked.contains(desc)) {
                         continue;
                     }
@@ -198,16 +212,21 @@ public abstract class Proxy {
                     // 例如args[0] = ($w)$1;
                     // 例如 Object ret = handler.invoke(this, methods[3], args);
                     for (int j = 0; j < pts.length; j++) {
+                        // 生成 args[1...N] = ($w)$1...N;
                         code.append(" args[").append(j).append("] = ($w)$").append(j + 1).append(";");
                     }
+                    // 生成 InvokerHandler 接口的 invoker 方法调用语句，如下：
+                    // Object ret = handler.invoke(this, methods[1...N], args);
                     code.append(" Object ret = handler.invoke(this, methods[").append(ix).append("], args);");
                     // 如果方法不是void类型
                     // 则拼接 return ret;
                     if (!Void.TYPE.equals(rt)) {
+                        // 生成返回语句，形如 return (java.lang.String) ret;
                         code.append(" return ").append(asArgument(rt, "ret")).append(";");
                     }
 
                     methods.add(method);
+                    // 添加方法名、访问控制符、参数列表、方法代码等信息到 ClassGenerator 中
                     ccp.addMethod(method.getName(), method.getModifiers(), rt, pts, method.getExceptionTypes(), code.toString());
                 }
             }
@@ -217,12 +236,18 @@ public abstract class Proxy {
             }
 
             // create ProxyInstance class.
+            // 构建接口代理类名称：pkg + ".proxy" + id，比如 org.apache.dubbo.proxy0
             String pcn = pkg + ".proxy" + id;
             ccp.setClassName(pcn);
             // 添加静态字段Method[] methods
             ccp.addField("public static java.lang.reflect.Method[] methods;");
+            // 生成 private java.lang.reflect.InvocationHandler handler;
             ccp.addField("private " + InvocationHandler.class.getName() + " handler;");
             // 添加实例对象InvokerInvocationHandler hanler，添加参数为InvokerInvocationHandler的构造器
+            // 为接口代理类添加带有 InvocationHandler 参数的构造方法，比如：
+            // porxy0(java.lang.reflect.InvocationHandler arg0) {
+            //     handler=$1;
+            // }
             ccp.addConstructor(Modifier.PUBLIC, new Class<?>[]{InvocationHandler.class}, new Class<?>[0], "handler=$1;");
             // 添加默认无参构造器
             ccp.addDefaultConstructor();
@@ -231,14 +256,19 @@ public abstract class Proxy {
             clazz.getField("methods").set(null, methods.toArray(new Method[0]));
 
             // create Proxy class.
-            // 生成的字节码对象为服务接口的代理对象
+            // 生成的字节码对象为服务接口的代理对象 构建 Proxy 子类名称，比如 Proxy1，Proxy2 等
             String fcn = Proxy.class.getName() + id;
             ccm = ClassGenerator.newInstance(cl);
             ccm.setClassName(fcn);
             ccm.addDefaultConstructor();
             ccm.setSuperClass(Proxy.class);
+            // 为 Proxy 的抽象方法 newInstance 生成实现代码，形如：
+            // public Object newInstance(java.lang.reflect.InvocationHandler h) {
+            //     return new org.apache.dubbo.proxy0($1);
+            // }
             ccm.addMethod("public Object newInstance(" + InvocationHandler.class.getName() + " h){ return new " + pcn + "($1); }");
             Class<?> pc = ccm.toClass();
+            // 生成 Proxy 实现类
             proxy = (Proxy) pc.newInstance();
         } catch (RuntimeException e) {
             throw e;
@@ -259,6 +289,8 @@ public abstract class Proxy {
                 } else {
                     cache.put(key, new WeakReference<Proxy>(proxy));
                 }
+                // 唤醒其他等待线程
+
                 cache.notifyAll();
             }
         }

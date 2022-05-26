@@ -484,10 +484,11 @@ public class RegistryProtocol implements Protocol {
         if (group != null && group.length() > 0) {
             if ((COMMA_SPLIT_PATTERN.split(group)).length > 1 || "*".equals(group)) {
                 // group有多个值，这里的cluster为MergeableCluster
+                // 如果有多个组，或者组配置为*，则使用MergeableCluster，并调用 doRefer 继续执行服务引用逻辑
                 return doRefer(getMergeableCluster(), registry, type, url);
             }
         }
-
+        // 只有一个组或者没有组配置，则直接执行doRefer
         // 这里的cluster是cluster的Adaptive对象,扩展点
         return doRefer(cluster, registry, type, url);
     }
@@ -510,7 +511,9 @@ public class RegistryProtocol implements Protocol {
         // type表示一个服务对应一个RegistryDirectory，url表示注册中心地址
         // 在消费端，最核心的就是RegistryDirectory
         RegistryDirectory<T> directory = new RegistryDirectory<T>(type, url);
+        // 设置注册中心
         directory.setRegistry(registry);
+        //设置协议
         directory.setProtocol(protocol);
 
 
@@ -520,6 +523,7 @@ public class RegistryProtocol implements Protocol {
 
         // 消费者url
         URL subscribeUrl = new URL(CONSUMER_PROTOCOL, parameters.remove(REGISTER_IP_KEY), 0, type.getName(), parameters);
+        // 注册服务消费者，在 consumers 目录下新节点
         if (!ANY_VALUE.equals(url.getServiceInterface()) && url.getParameter(REGISTER_KEY, true)) {
             directory.setRegisteredConsumerUrl(getRegisteredConsumerUrl(subscribeUrl, url));
 
@@ -544,7 +548,9 @@ public class RegistryProtocol implements Protocol {
         /**
          * 创建RegistryProtocol的时候会进行依赖注入，注入进来的是Cluster的Adaptive类
          */
+        // 一个注册中心可能有多个服务提供者，因此这里需要将多个服务提供者合并为一个，生成一个invoker
         Invoker invoker = cluster.join(directory);
+        // 在服务提供者处注册消费者
         ProviderConsumerRegTable.registerConsumer(invoker, url, subscribeUrl, directory);
         return invoker;
     }

@@ -48,7 +48,7 @@ public class FutureFilter extends ListenableFilter {
 
     @Override
     public Result invoke(final Invoker<?> invoker, final Invocation invocation) throws RpcException {
-
+        // 该方法是真正的调用方法的执行
         fireInvokeCallback(invoker, invocation);
         // need to configure if there's return value before the invocation in order to help invoker to judge if it's
         // necessary to return future.

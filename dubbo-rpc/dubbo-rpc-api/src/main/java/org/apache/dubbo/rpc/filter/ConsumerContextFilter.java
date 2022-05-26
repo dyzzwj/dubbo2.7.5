@@ -53,7 +53,7 @@ public class ConsumerContextFilter extends ListenableFilter {
      */
     @Override
     public Result invoke(Invoker<?> invoker, Invocation invocation) throws RpcException {
-        // 设置rpc上下文
+        // 获得上下文，设置invoker，会话域，本地地址和原创地址
         RpcContext.getContext()
                 .setInvoker(invoker)
                 .setInvocation(invocation)
@@ -67,6 +67,7 @@ public class ConsumerContextFilter extends ListenableFilter {
             ((RpcInvocation) invocation).setInvoker(invoker);
         }
         try {
+            // 移除服务端的上下文
             RpcContext.removeServerContext();
             // 调用下个调用链
             return invoker.invoke(invocation);
