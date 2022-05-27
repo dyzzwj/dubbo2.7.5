@@ -52,39 +52,50 @@ public class ChannelEventRunnable implements Runnable {
 
     @Override
     public void run() {
+        // 如果是接收的消息
         if (state == ChannelState.RECEIVED) {
             try {
+                // 直接调用下一个received
                 handler.received(channel, message);
             } catch (Exception e) {
                 logger.warn("ChannelEventRunnable handle " + state + " operation error, channel is " + channel
                         + ", message is " + message, e);
             }
         } else {
+
             switch (state) {
+            //如果是连接事件请求
             case CONNECTED:
                 try {
+                    // 执行连接
                     handler.connected(channel);
                 } catch (Exception e) {
                     logger.warn("ChannelEventRunnable handle " + state + " operation error, channel is " + channel, e);
                 }
                 break;
+                // 如果是断开连接事件请求
             case DISCONNECTED:
                 try {
+                    // 执行断开连接
                     handler.disconnected(channel);
                 } catch (Exception e) {
                     logger.warn("ChannelEventRunnable handle " + state + " operation error, channel is " + channel, e);
                 }
                 break;
+                // 如果是发送消息
             case SENT:
                 try {
+                    // 执行发送消息
                     handler.sent(channel, message);
                 } catch (Exception e) {
                     logger.warn("ChannelEventRunnable handle " + state + " operation error, channel is " + channel
                             + ", message is " + message, e);
                 }
                 break;
+                // 如果是异常
             case CAUGHT:
                 try {
+                    // 执行异常捕获
                     handler.caught(channel, exception);
                 } catch (Exception e) {
                     logger.warn("ChannelEventRunnable handle " + state + " operation error, channel is " + channel

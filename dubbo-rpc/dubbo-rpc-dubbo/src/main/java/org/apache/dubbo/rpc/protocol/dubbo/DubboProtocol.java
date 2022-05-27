@@ -138,7 +138,7 @@ public class DubboProtocol extends AbstractProtocol {
          */
         @Override
         public CompletableFuture<Object> reply(ExchangeChannel channel, Object message) throws RemotingException {
-            // 如果请求消息属于会话域
+            // 如果请求消息不属于会话域，则抛出异常
             if (!(message instanceof Invocation)) {
                 throw new RemotingException(channel, "Unsupported request: "
                         + (message == null ? null : (message.getClass().getName() + ": " + message))
@@ -292,7 +292,9 @@ public class DubboProtocol extends AbstractProtocol {
     }
 
     Invoker<?> getInvoker(Channel channel, Invocation inv) throws RemotingException {
+        //回调
         boolean isCallBackServiceInvoke = false;
+        //
         boolean isStubServiceInvoke = false;
         int port = channel.getLocalAddress().getPort();
         //接口名

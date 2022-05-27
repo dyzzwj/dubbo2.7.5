@@ -144,9 +144,11 @@ public abstract class AbstractPeer implements Endpoint, ChannelHandler {
 
     @Override
     public void received(Channel ch, Object msg) throws RemotingException {
+        // 如果通道已经关闭，则直接返回
         if (closed) {
             return;
         }
+        //MultiMessageHandler.received
         handler.received(ch, msg);
     }
 

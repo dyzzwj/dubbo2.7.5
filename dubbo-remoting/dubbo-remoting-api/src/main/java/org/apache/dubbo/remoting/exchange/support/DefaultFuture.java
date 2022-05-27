@@ -223,17 +223,21 @@ public class DefaultFuture extends CompletableFuture<Object> {
 
 
     private void doReceived(Response res) {
+        // 如果结果为空，则抛出异常
         if (res == null) {
             throw new IllegalStateException("response cannot be null");
         }
+        // 如果结果的状态码为ok
         if (res.getStatus() == Response.OK) {
             /**
              * 如果请求是同步的 解阻塞 AsyncToSyncInvoker#invoke()
              */
             this.complete(res.getResult());
         } else if (res.getStatus() == Response.CLIENT_TIMEOUT || res.getStatus() == Response.SERVER_TIMEOUT) {
+            // 如果超时，则返回一个超时异常
             this.completeExceptionally(new TimeoutException(res.getStatus() == Response.SERVER_TIMEOUT, channel, res.getErrorMessage()));
         } else {
+            // 否则返回一个RemotingException
             this.completeExceptionally(new RemotingException(channel, res.getErrorMessage()));
         }
     }

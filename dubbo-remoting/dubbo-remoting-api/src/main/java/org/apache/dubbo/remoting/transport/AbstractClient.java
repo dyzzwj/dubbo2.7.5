@@ -174,9 +174,11 @@ public abstract class AbstractClient extends AbstractEndpoint implements Client 
 
     @Override
     public void send(Object message, boolean sent) throws RemotingException {
+        // 如果需要重连或者没有链接，则连接
         if (needReconnect && !isConnected()) {
             connect();
         }
+        //获得通道
         Channel channel = getChannel();
         //TODO Can the value returned by getChannel() be null? need improvement.
         if (channel == null || !channel.isConnected()) {

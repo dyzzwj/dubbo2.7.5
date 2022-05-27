@@ -107,12 +107,14 @@ public class NettyServerHandler extends ChannelDuplexHandler {
 
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
-        // 接收到数据
+        // 看是否在缓存中命中，如果没有命中，则创建NettyChannel并且缓存。
         NettyChannel channel = NettyChannel.getOrAddChannel(ctx.channel(), url, handler);
         try {
+            // 接受消息
+            //AbstractPeer.received
             handler.received(channel, msg);
         } finally {
-
+            // 如果通道不活跃或者断掉，则从缓存中清除
             NettyChannel.removeChannelIfDisconnected(ctx.channel());
         }
     }
