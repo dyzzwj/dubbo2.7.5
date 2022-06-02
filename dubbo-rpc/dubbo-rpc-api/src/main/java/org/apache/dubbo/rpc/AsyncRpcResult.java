@@ -42,20 +42,33 @@ public class AsyncRpcResult extends AbstractResult {
     private static final Logger logger = LoggerFactory.getLogger(AsyncRpcResult.class);
 
     /**
-     * RpcContext may already have been changed when callback happens, it happens when the same thread is used to execute another RPC call.
-     * So we should keep the reference of current RpcContext instance and restore it before callback being executed.
+     * 当相同的线程用于执行另一个RPC调用时，并且回调发生时，原来的RpcContext可能已经被更改。
+     * 所以我们应该保留当前RpcContext实例的引用，并在执行回调之前恢复它。
+     * 存储当前的RpcContext
      */
     private RpcContext storedContext;
+    /**
+     * 存储当前的ServerContext
+     */
     private RpcContext storedServerContext;
-
+    /**
+     * 会话域
+     */
     private Invocation invocation;
 
     public AsyncRpcResult(Invocation invocation) {
+        // 设置会话域
         this.invocation = invocation;
+        // 获得当前线程内代表消费者端的Context
         this.storedContext = RpcContext.getContext();
+        // 获得当前线程内代表服务端的Context
         this.storedServerContext = RpcContext.getServerContext();
     }
 
+    /**
+     * 转换成新的AsyncRpcResult
+     * @param asyncRpcResult
+     */
     public AsyncRpcResult(AsyncRpcResult asyncRpcResult) {
         this.invocation = asyncRpcResult.getInvocation();
         this.storedContext = asyncRpcResult.getStoredContext();
@@ -100,6 +113,7 @@ public class AsyncRpcResult extends AbstractResult {
 
     @Override
     public Throwable getException() {
+        // 获得抛出的异常信息
         return getAppResponse().getException();
     }
 
@@ -109,8 +123,11 @@ public class AsyncRpcResult extends AbstractResult {
             if (this.isDone()) {
                 this.get().setException(t);
             } else {
+                // 创建一个AppResponse实例
                 AppResponse appResponse = new AppResponse();
+                // 把异常放入appResponse
                 appResponse.setException(t);
+                // 标志该future完成，并且把携带异常的appResponse设置为该future的结果
                 this.complete(appResponse);
             }
         } catch (Exception e) {
@@ -121,11 +138,13 @@ public class AsyncRpcResult extends AbstractResult {
 
     @Override
     public boolean hasException() {
+        // 是否有抛出异常
         return getAppResponse().hasException();
     }
 
     public Result getAppResponse() {
         try {
+            // 如果该结果计算完成，则直接调用get方法获得结果
             if (this.isDone()) {
                 return this.get();
             }
@@ -133,14 +152,17 @@ public class AsyncRpcResult extends AbstractResult {
             // This should never happen;
             logger.error("Got exception when trying to fetch the underlying result from AsyncRpcResult.", e);
         }
+        // 创建AppResponse
         return new AppResponse();
     }
 
     @Override
     public Object recreate() throws Throwable {
+        // 强制类型转化
         RpcInvocation rpcInvocation = (RpcInvocation) invocation;
         FutureAdapter future = new FutureAdapter(this);
         RpcContext.getContext().setFuture(future);
+        // 如果返回的是future类型
         if (InvokeMode.FUTURE == rpcInvocation.getInvokeMode()) {
             return future;
         }

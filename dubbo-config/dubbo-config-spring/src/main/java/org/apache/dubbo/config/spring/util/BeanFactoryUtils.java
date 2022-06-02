@@ -47,8 +47,9 @@ public class BeanFactoryUtils {
 
     public static boolean addApplicationListener(ApplicationContext applicationContext, ApplicationListener listener) {
         try {
-            // backward compatibility to spring 2.0.1
+            //获取ApplicationContext中方法名为addApplicationListener并且形参列表只有一个ApplicationListener的方法
             Method method = applicationContext.getClass().getMethod("addApplicationListener", ApplicationListener.class);
+            //执行ApplicationContext.addApplicationListener(listener)方法
             method.invoke(applicationContext, listener);
             return true;
         } catch (Throwable t) {

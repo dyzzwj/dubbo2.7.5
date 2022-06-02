@@ -61,9 +61,19 @@ public interface Filter {
     }
 
     interface Listener {
-
+        /**
+         * 回调正常的调用结果
+         * @param appResponse
+         * @param invoker
+         * @param invocation
+         */
         void onResponse(Result appResponse, Invoker<?> invoker, Invocation invocation);
-
+        /**
+         * 回调异常结果
+         * @param t
+         * @param invoker
+         * @param invocation
+         */
         void onError(Throwable t, Invoker<?> invoker, Invocation invocation);
     }
 
